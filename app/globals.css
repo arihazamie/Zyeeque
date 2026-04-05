@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #0a0a0a;
+    --bg-surface: #141414;
+    --bg-hover: rgba(255,255,255,0.05);
+    --border-subtle: rgba(255,255,255,0.08);
+    --border-mid: rgba(255,255,255,0.15);
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --text-muted: #555555;
+    --accent-blue: #ffffff;
+    --accent-cyan: #ffffff;
+    --green: #ffffff;
+    --green-bright: #e0e0e0;
+    --red: #666666;
+    --red-bright: #999999;
+    --green-dim: rgba(255,255,255,0.1);
+    --red-dim: rgba(150,150,150,0.1);
+    --yellow: #cccccc;
+    --purple: #aaaaaa;
+    --orange: #bbbbbb;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { color-scheme: dark; }
+  body {
+    background-color: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    height: 100vh;
+  }
+  button { border: none; outline: none; cursor: pointer; }
+  select { outline: none; }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar { width: 3px; height: 3px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.75); }
+  }
+
+  .price-flash-up { animation: flash-up 0.5s ease-out; }
+  .price-flash-down { animation: flash-down 0.5s ease-out; }
+  @keyframes flash-up { 0% { color: var(--green-bright); } 100% { color: var(--text-primary); } }
+  @keyframes flash-down { 0% { color: var(--red-bright); } 100% { color: var(--text-primary); } }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 0.8s linear infinite; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.15s ease-out; }
+}
