@@ -4,30 +4,30 @@
 
 @layer base {
   :root {
-    --bg-deep: #000000;
-    --bg-panel: #0a0a0a;
-    --bg-surface: #141414;
-    --bg-hover: rgba(255,255,255,0.05);
-    --border-subtle: rgba(255,255,255,0.08);
-    --border-mid: rgba(255,255,255,0.15);
-    --text-primary: #ffffff;
-    --text-secondary: #a0a0a0;
-    --text-muted: #555555;
-    --accent-blue: #ffffff;
-    --accent-cyan: #ffffff;
-    --green: #ffffff;
-    --green-bright: #e0e0e0;
-    --red: #666666;
-    --red-bright: #999999;
-    --green-dim: rgba(255,255,255,0.1);
-    --red-dim: rgba(150,150,150,0.1);
-    --yellow: #cccccc;
-    --purple: #aaaaaa;
-    --orange: #bbbbbb;
+    --bg-deep: #f0f4f8;
+    --bg-panel: #ffffff;
+    --bg-surface: #f7f9fc;
+    --bg-hover: rgba(0,0,0,0.04);
+    --border-subtle: rgba(0,0,0,0.08);
+    --border-mid: rgba(0,0,0,0.15);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --green: #059669;
+    --green-bright: #10b981;
+    --red: #dc2626;
+    --red-bright: #ef4444;
+    --green-dim: rgba(5,150,105,0.1);
+    --red-dim: rgba(220,38,38,0.1);
+    --yellow: #d97706;
+    --purple: #7c3aed;
+    --orange: #ea580c;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { color-scheme: dark; }
+  html { color-scheme: light; }
   body {
     background-color: var(--bg-deep);
     color: var(--text-primary);
@@ -43,11 +43,11 @@
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.08) transparent;
+    scrollbar-color: rgba(0,0,0,0.12) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar { width: 3px; height: 3px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-  .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
 
   .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
   @keyframes pulse-dot {

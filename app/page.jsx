@@ -16,26 +16,26 @@ export const dynamic = "force-dynamic";
 
 // ─── colour palette ────────────────────────────────────────────────────────
 const C = {
-  ma7:    "#ffffff",
-  ma25:   "#aaaaaa",
-  ma99:   "#666666",
-  bbUpper:"#888888",
-  bbLower:"#888888",
-  bbMid:  "#bbbbbb",
-  macd:   "#ffffff",
-  signal: "#888888",
-  rsiLine:"#cccccc",
-  rsi70:  "#999999",
-  rsi30:  "#cccccc",
-  stBull: "#0ecb81",   // SuperTrend bullish
-  stBear: "#f6465d",   // SuperTrend bearish
-  stochK: "#ffffff",
-  stochD: "#888888",
-  wr:     "#aaaaaa",
-  cci:    "#cccccc",
-  ribbon: ["#ffffff","#d4d4d4","#aaaaaa","#777777","#444444"],
-  vwap:   "#dddddd",
-  vol:    { up: "rgba(14,203,129,0.3)", dn: "rgba(246,70,93,0.3)" },
+  ma7:    "#1d4ed8",
+  ma25:   "#9333ea",
+  ma99:   "#c2410c",
+  bbUpper:"#6366f1",
+  bbLower:"#6366f1",
+  bbMid:  "#818cf8",
+  macd:   "#2563eb",
+  signal: "#dc2626",
+  rsiLine:"#7c3aed",
+  rsi70:  "#dc2626",
+  rsi30:  "#059669",
+  stBull: "#059669",   // SuperTrend bullish
+  stBear: "#dc2626",   // SuperTrend bearish
+  stochK: "#2563eb",
+  stochD: "#64748b",
+  wr:     "#0891b2",
+  cci:    "#0f766e",
+  ribbon: ["#1e40af","#3b82f6","#818cf8","#a78bfa","#c4b5fd"],
+  vwap:   "#d97706",
+  vol:    { up: "rgba(5,150,105,0.3)", dn: "rgba(220,38,38,0.3)" },
 };
 
 // ─── helpers ───────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ function toSeries(times, values, filterNull = true) {
 
 // ─── sub-components ────────────────────────────────────────────────────────
 function Dot({ status }) {
-  const color = { connected:"#ffffff", reconnecting:"#aaaaaa", error:"#666666", polling:"#cccccc" }[status] ?? "#444444";
+  const color = { connected:"#059669", reconnecting:"#f59e0b", error:"#dc2626", polling:"#6366f1" }[status] ?? "#94a3b8";
   return <span className="pulse-dot" style={{ display:"inline-block", width:7, height:7, borderRadius:"50%", background:color, flexShrink:0 }} />;
 }
 
@@ -56,8 +56,8 @@ function Kbd({ active, onClick, children, color }) {
     <button onClick={onClick} style={{
       padding:"3px 9px", borderRadius:4, fontSize:11, fontWeight:600,
       cursor:"pointer", transition:"all .15s",
-      color: active ? (color ?? "#000000") : "var(--text-secondary)",
-      background: active ? (color ?? "#ffffff") : "transparent",
+      color: active ? "#ffffff" : "var(--text-secondary)",
+      background: active ? (color ?? "#2563eb") : "rgba(0,0,0,0.04)",
       border: `1px solid ${active ? "transparent" : "var(--border-subtle)"}`,
     }}>{children}</button>
   );
@@ -187,16 +187,16 @@ export default function HomePage() {
       const chart = createChart(el, {
         width: el.clientWidth,
         height: el.clientHeight,
-        layout:    { background:{ color:"transparent" }, textColor:"#a0a0a0", fontSize:11, fontFamily:"'JetBrains Mono', monospace" },
-        grid:      { vertLines:{ color:"rgba(255,255,255,0.04)" }, horzLines:{ color:"rgba(255,255,255,0.04)" } },
+        layout:    { background:{ color:"transparent" }, textColor:"#64748b", fontSize:11, fontFamily:"'JetBrains Mono', monospace" },
+        grid:      { vertLines:{ color:"rgba(0,0,0,0.05)" }, horzLines:{ color:"rgba(0,0,0,0.05)" } },
         crosshair: {
           mode: CrosshairMode.Normal,
-          vertLine: { color:"rgba(255,255,255,0.3)", width:1, style:LineStyle.Dashed, labelBackgroundColor:"#1a1a1a" },
-          horzLine: { color:"rgba(255,255,255,0.3)", width:1, style:LineStyle.Dashed, labelBackgroundColor:"#1a1a1a" },
+          vertLine: { color:"rgba(0,0,0,0.35)", width:1, style:LineStyle.Dashed, labelBackgroundColor:"#e2e8f0" },
+          horzLine: { color:"rgba(0,0,0,0.35)", width:1, style:LineStyle.Dashed, labelBackgroundColor:"#e2e8f0" },
         },
-        rightPriceScale: { borderColor:"rgba(255,255,255,0.1)", scaleMargins:{ top:0.08, bottom: indVol ? 0.28 : 0.05 } },
+        rightPriceScale: { borderColor:"rgba(0,0,0,0.08)", scaleMargins:{ top:0.08, bottom: indVol ? 0.28 : 0.05 } },
         timeScale: {
-          borderColor:"rgba(255,255,255,0.1)", timeVisible:true, secondsVisible:false,
+          borderColor:"rgba(0,0,0,0.08)", timeVisible:true, secondsVisible:false,
           tickMarkFormatter: t => {
             const d = new Date(t * 1000);
             return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
@@ -216,21 +216,21 @@ export default function HomePage() {
       // ── main series ──
       if (chartType === "candle") {
         sm.main = chart.addCandlestickSeries({
-          upColor:"#0ecb81", downColor:"#f6465d",
-          borderUpColor:"#0ecb81", borderDownColor:"#f6465d",
-          wickUpColor:"#0ecb81", wickDownColor:"#f6465d",
-          priceLineVisible:true, priceLineColor:"rgba(255,255,255,0.25)",
+          upColor:"#059669", downColor:"#dc2626",
+          borderUpColor:"#059669", borderDownColor:"#dc2626",
+          wickUpColor:"#059669", wickDownColor:"#dc2626",
+          priceLineVisible:true, priceLineColor:"rgba(0,0,0,0.2)",
           priceLineWidth:1, priceLineStyle:LineStyle.Dashed,
           lastValueVisible:true,
         });
         sm.main.setData(candles.map(c => ({ time:Math.floor(c.t/1000), open:c.o, high:c.h, low:c.l, close:c.c })));
       } else if (chartType === "line") {
-        sm.main = chart.addLineSeries({ color:"#ffffff", lineWidth:2, priceLineVisible:true, lastValueVisible:true });
+        sm.main = chart.addLineSeries({ color:"#2563eb", lineWidth:2, priceLineVisible:true, lastValueVisible:true });
         sm.main.setData(candles.map(c => ({ time:Math.floor(c.t/1000), value:c.c })));
       } else {
         sm.main = chart.addAreaSeries({
-          topColor:"rgba(255,255,255,0.2)", bottomColor:"rgba(255,255,255,0.01)",
-          lineColor:"#ffffff", lineWidth:2, priceLineVisible:true, lastValueVisible:true,
+          topColor:"rgba(37,99,235,0.15)", bottomColor:"rgba(37,99,235,0.01)",
+          lineColor:"#2563eb", lineWidth:2, priceLineVisible:true, lastValueVisible:true,
         });
         sm.main.setData(candles.map(c => ({ time:Math.floor(c.t/1000), value:c.c })));
       }
@@ -291,20 +291,98 @@ export default function HomePage() {
         });
       }
 
-      // ── SuperTrend ──
+      // ── SuperTrend ──────────────────────────────────────────────────────────
+      // Implementasi 1:1 PineScript v6 ta.supertrend():
+      //   direction = -1 → Uptrend   → garis HIJAU di bawah harga (lowerBand)
+      //   direction =  1 → Downtrend → garis MERAH di atas harga  (upperBand)
+      //
+      // Fill shading (Pine: fill bodyMiddle ↔ upTrend/downTrend):
+      //   - Uptrend fill  : area hijau transparan antara garis dan harga
+      //   - Downtrend fill: area merah transparan antara garis dan harga
+      // ─────────────────────────────────────────────────────────────────────────
       if (indST) {
-        const { supertrend, direction } = calcSuperTrend(highs, lows, closes, indSettings.st.period, indSettings.st.multiplier);
-        // Split into bullish (green) and bearish (red) segments
-        const bullData = [], bearData = [];
+        const { supertrend, direction, bodyMiddle } = calcSuperTrend(
+          highs, lows, closes,
+          indSettings.st.period, indSettings.st.multiplier
+        );
+
+        // Split ke dua line series (line breaks otomatis saat filter null)
+        const bullLineData = []; // Uptrend   — direction === -1 — HIJAU
+        const bearLineData = []; // Downtrend — direction ===  1 — MERAH
+
+        // Fill shading: uptrend = area antara lowerBand dan bodyMiddle (atas)
+        //               downtrend = area antara bodyMiddle (bawah) dan upperBand
+        const bullFillData = []; // topValue = bodyMiddle, value = supertrend (green fill)
+        const bearFillData = []; // topValue = supertrend, value = bodyMiddle (red fill)
+
         times.forEach((t, i) => {
           if (supertrend[i] === null) return;
-          if (direction[i] === 1) { bullData.push({ time:t, value:supertrend[i] }); bearData.push({ time:t, value:null }); }
-          else { bearData.push({ time:t, value:supertrend[i] }); bullData.push({ time:t, value:null }); }
+          if (direction[i] === -1) {
+            // Uptrend: garis hijau di bawah harga
+            bullLineData.push({ time: t, value: supertrend[i] });
+            // Fill: dari supertrend (bawah) ke bodyMiddle (atas) → hijau
+            if (bodyMiddle[i] !== null) {
+              bullFillData.push({ time: t, value: bodyMiddle[i] });
+            }
+          } else {
+            // Downtrend: garis merah di atas harga
+            bearLineData.push({ time: t, value: supertrend[i] });
+            // Fill: dari bodyMiddle (bawah) ke supertrend (atas) → merah
+            if (bodyMiddle[i] !== null) {
+              bearFillData.push({ time: t, value: supertrend[i] });
+            }
+          }
         });
-        sm.stBull = chart.addLineSeries({ color:C.stBull, lineWidth:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:true });
-        sm.stBear = chart.addLineSeries({ color:C.stBear, lineWidth:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:true });
-        sm.stBull.setData(bullData.filter(d => d.value !== null));
-        sm.stBear.setData(bearData.filter(d => d.value !== null));
+
+        // Garis utama — Uptrend (hijau)
+        sm.stBull = chart.addLineSeries({
+          color: C.stBull, lineWidth: 2,
+          priceLineVisible: false, lastValueVisible: true,
+          crosshairMarkerVisible: true,
+          crosshairMarkerRadius: 4,
+          crosshairMarkerBorderColor: C.stBull,
+          crosshairMarkerBackgroundColor: "#ffffff",
+          title: "▲ ST",
+        });
+        sm.stBull.setData(bullLineData);
+
+        // Garis utama — Downtrend (merah)
+        sm.stBear = chart.addLineSeries({
+          color: C.stBear, lineWidth: 2,
+          priceLineVisible: false, lastValueVisible: true,
+          crosshairMarkerVisible: true,
+          crosshairMarkerRadius: 4,
+          crosshairMarkerBorderColor: C.stBear,
+          crosshairMarkerBackgroundColor: "#ffffff",
+          title: "▼ ST",
+        });
+        sm.stBear.setData(bearLineData);
+
+        // Fill shading — Uptrend background (hijau transparan, seperti Pine fill)
+        if (bullFillData.length > 0) {
+          sm.stBullFill = chart.addAreaSeries({
+            lineColor: "transparent",
+            topColor:    "rgba(5,150,105,0.12)",
+            bottomColor: "rgba(5,150,105,0.01)",
+            lineWidth: 0,
+            priceLineVisible: false, lastValueVisible: false,
+            crosshairMarkerVisible: false,
+          });
+          sm.stBullFill.setData(bullFillData);
+        }
+
+        // Fill shading — Downtrend background (merah transparan, seperti Pine fill)
+        if (bearFillData.length > 0) {
+          sm.stBearFill = chart.addAreaSeries({
+            lineColor: "transparent",
+            topColor:    "rgba(220,38,38,0.12)",
+            bottomColor: "rgba(220,38,38,0.01)",
+            lineWidth: 0,
+            priceLineVisible: false, lastValueVisible: false,
+            crosshairMarkerVisible: false,
+          });
+          sm.stBearFill.setData(bearFillData);
+        }
       }
 
       // ── RSI pane ──
@@ -337,8 +415,8 @@ export default function HomePage() {
         const stochValid = toSeries(times, k);
         if (stochValid.length) {
           const t0 = stochValid[0].time, t1 = stochValid[stochValid.length-1].time;
-          sm.stoch80 = chart.addLineSeries({ color:"rgba(244,63,94,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"stoch", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
-          sm.stoch20 = chart.addLineSeries({ color:"rgba(16,185,129,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"stoch", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
+          sm.stoch80 = chart.addLineSeries({ color:"rgba(220,38,38,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"stoch", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
+          sm.stoch20 = chart.addLineSeries({ color:"rgba(5,150,105,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"stoch", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
           sm.stoch80.setData([{ time:t0, value:80 },{ time:t1, value:80 }]);
           sm.stoch20.setData([{ time:t0, value:20 },{ time:t1, value:20 }]);
         }
@@ -353,8 +431,8 @@ export default function HomePage() {
         const wrValid = toSeries(times, wrVals);
         if (wrValid.length) {
           const t0 = wrValid[0].time, t1 = wrValid[wrValid.length-1].time;
-          sm.wr80 = chart.addLineSeries({ color:"rgba(244,63,94,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"wr", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
-          sm.wr20 = chart.addLineSeries({ color:"rgba(16,185,129,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"wr", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
+          sm.wr80 = chart.addLineSeries({ color:"rgba(220,38,38,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"wr", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
+          sm.wr20 = chart.addLineSeries({ color:"rgba(5,150,105,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"wr", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
           sm.wr80.setData([{ time:t0, value:-20 },{ time:t1, value:-20 }]);
           sm.wr20.setData([{ time:t0, value:-80 },{ time:t1, value:-80 }]);
         }
@@ -369,8 +447,8 @@ export default function HomePage() {
         const cciValid = toSeries(times, cciVals);
         if (cciValid.length) {
           const t0 = cciValid[0].time, t1 = cciValid[cciValid.length-1].time;
-          sm.cci100 = chart.addLineSeries({ color:"rgba(244,63,94,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"cci", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
-          sm.cciN100 = chart.addLineSeries({ color:"rgba(16,185,129,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"cci", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
+          sm.cci100 = chart.addLineSeries({ color:"rgba(220,38,38,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"cci", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
+          sm.cciN100 = chart.addLineSeries({ color:"rgba(5,150,105,0.4)", lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"cci", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
           sm.cci100.setData([{ time:t0, value:100 },{ time:t1, value:100 }]);
           sm.cciN100.setData([{ time:t0, value:-100 },{ time:t1, value:-100 }]);
         }
@@ -386,7 +464,7 @@ export default function HomePage() {
         sm.macd.setData(toSeries(times, macdLine));
         sm.macdSig.setData(toSeries(times, signalLine));
         sm.macdHist.setData(
-          times.map((t,i) => ({ time:t, value: histogram[i] ?? 0, color: histogram[i] >= 0 ? "rgba(38,166,154,0.6)" : "rgba(239,83,80,0.6)" }))
+          times.map((t,i) => ({ time:t, value: histogram[i] ?? 0, color: histogram[i] >= 0 ? "rgba(5,150,105,0.6)" : "rgba(220,38,38,0.6)" }))
             .filter((_,i) => histogram[i] !== null)
         );
       }
@@ -573,7 +651,7 @@ export default function HomePage() {
       }}>
         {/* Logo */}
         <div style={{ display:"flex", alignItems:"center", gap:8, padding:"0 16px", borderRight:"1px solid var(--border-subtle)", height:"100%" }}>
-          <div style={{ width:20, height:20, borderRadius:4, background:"linear-gradient(135deg,#ffffff,#888888)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ width:20, height:20, borderRadius:4, background:"linear-gradient(135deg,#3b82f6,#06b6d4)", display:"flex", alignItems:"center", justifyContent:"center" }}>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 5h8M5 1v8" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
           </div>
           <span style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", letterSpacing:"-0.01em" }}>Zyeeque</span>
@@ -586,7 +664,7 @@ export default function HomePage() {
               height:"100%", padding:"0 13px", fontSize:12, fontWeight:500, whiteSpace:"nowrap",
               cursor:"pointer", transition:"all .15s",
               color: instId===p.value ? "var(--accent-cyan)" : "var(--text-secondary)",
-              background: instId===p.value ? "rgba(34,211,238,0.07)" : "transparent",
+              background: instId===p.value ? "rgba(6,182,212,0.08)" : "transparent",
               borderRight:"1px solid var(--border-subtle)",
               borderBottom: instId===p.value ? "2px solid var(--accent-cyan)" : "2px solid transparent",
             }}>{p.label}</button>
@@ -654,8 +732,8 @@ export default function HomePage() {
                   display:"flex", alignItems:"center", gap:7,
                   padding:"5px 12px", borderRadius:5, fontSize:12, fontWeight:600,
                   cursor:"pointer", transition:"all .15s",
-                  color: showIndPanel ? "#050810" : "var(--text-secondary)",
-                  background: showIndPanel ? "var(--accent-cyan)" : "rgba(255,255,255,0.05)",
+                  color: showIndPanel ? "#ffffff" : "var(--text-secondary)",
+                  background: showIndPanel ? "var(--accent-cyan)" : "rgba(0,0,0,0.04)",
                   border: `1px solid ${showIndPanel ? "transparent" : "var(--border-subtle)"}`,
                 }}
               >
@@ -663,16 +741,16 @@ export default function HomePage() {
                   <rect x="1" y="2" width="12" height="1.5" rx=".75" fill="currentColor"/>
                   <rect x="1" y="6.25" width="12" height="1.5" rx=".75" fill="currentColor"/>
                   <rect x="1" y="10.5" width="12" height="1.5" rx=".75" fill="currentColor"/>
-                  <circle cx="4" cy="2.75" r="1.5" fill={showIndPanel ? "#050810" : "var(--accent-cyan)"}/>
-                  <circle cx="9" cy="7" r="1.5" fill={showIndPanel ? "#050810" : "var(--accent-cyan)"}/>
-                  <circle cx="5.5" cy="11.25" r="1.5" fill={showIndPanel ? "#050810" : "var(--accent-cyan)"}/>
+                  <circle cx="4" cy="2.75" r="1.5" fill={showIndPanel ? "#ffffff" : "var(--accent-cyan)"}/>
+                  <circle cx="9" cy="7" r="1.5" fill={showIndPanel ? "#ffffff" : "var(--accent-cyan)"}/>
+                  <circle cx="5.5" cy="11.25" r="1.5" fill={showIndPanel ? "#ffffff" : "var(--accent-cyan)"}/>
                 </svg>
                 Indicators
                 {activeCount > 0 && (
                   <span style={{
                     minWidth:16, height:16, borderRadius:8, fontSize:10, fontWeight:700,
-                    background: showIndPanel ? "rgba(0,0,0,0.25)" : "var(--accent-cyan)",
-                    color: showIndPanel ? "#050810" : "#050810",
+                    background: showIndPanel ? "rgba(255,255,255,0.25)" : "var(--accent-cyan)",
+                    color: "#ffffff",
                     display:"flex", alignItems:"center", justifyContent:"center", padding:"0 4px",
                   }}>{activeCount}</span>
                 )}
@@ -687,16 +765,15 @@ export default function HomePage() {
               <div onClick={() => setShowIndPanel(false)} style={{ position:"fixed", inset:0, zIndex:40 }} />
               <div style={{
                 position:"absolute", top:"calc(100% + 6px)", right:0, zIndex:50,
-                background:"#0f1724", border:"1px solid rgba(255,255,255,0.1)",
+                background:"#ffffff", border:"1px solid rgba(0,0,0,0.1)",
                 borderRadius:10, padding:"16px", width:320,
-                boxShadow:"0 16px 48px rgba(0,0,0,0.6)",
+                boxShadow:"0 16px 48px rgba(0,0,0,0.12)",
                 maxHeight:"80vh", overflowY:"auto",
               }}>
                 {/* Header */}
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
                   <span style={{ fontSize:12, fontWeight:700, color:"var(--text-primary)", letterSpacing:"0.02em" }}>Indicators</span>
-                  <button onClick={() => setShowIndPanel(false)} style={{ width:20, height:20, borderRadius:4, border:"1px solid var(--border-subtle)", background:"transparent", cursor:"pointer", color:"var(--text-muted)", fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>×</button>
-                </div>
+                  <button onClick={() => setShowIndPanel(false)} style={{ width:20, height:20, borderRadius:4, border:"1px solid var(--border-subtle)", background:"transparent", cursor:"pointer", color:"var(--text-muted)", fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>×</button>                </div>
 
                 {/* ── helper sub-components (inline) ──────────────────────── */}
                 {(() => {
@@ -714,7 +791,7 @@ export default function HomePage() {
                         style={{
                           width:54, padding:"3px 6px", borderRadius:4, fontSize:11,
                           fontFamily:"'JetBrains Mono', monospace", fontWeight:600,
-                          background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)",
+                          background:"rgba(0,0,0,0.05)", border:"1px solid rgba(0,0,0,0.12)",
                           color:"var(--text-primary)", outline:"none",
                           WebkitAppearance:"none", MozAppearance:"textfield",
                         }}
@@ -733,8 +810,8 @@ export default function HomePage() {
                             display:"flex", alignItems:"center", justifyContent:"space-between",
                             width:"100%", padding:"8px 10px", borderRadius:isExpanded ? "6px 6px 0 0" : 6,
                             cursor:"pointer", transition:"all .12s",
-                            background: active ? `${color}14` : "transparent",
-                            border: `1px solid ${active ? color + "55" : "rgba(255,255,255,0.06)"}`,
+                            background: active ? `${color}14` : "rgba(0,0,0,0.02)",
+                            border: `1px solid ${active ? color + "55" : "rgba(0,0,0,0.08)"}`,
                             borderBottom: isExpanded ? "none" : undefined,
                           }}
                         >
@@ -751,7 +828,7 @@ export default function HomePage() {
                                 style={{
                                   display:"flex", alignItems:"center", justifyContent:"center",
                                   width:20, height:20, borderRadius:4, cursor:"pointer",
-                                  background: isExpanded ? "rgba(255,255,255,0.12)" : "transparent",
+                                  background: isExpanded ? "rgba(0,0,0,0.1)" : "transparent",
                                   color: isExpanded ? "var(--text-primary)" : "var(--text-muted)",
                                   transition:"all .12s",
                                 }}
@@ -765,7 +842,7 @@ export default function HomePage() {
                             {/* Toggle switch */}
                             <span style={{
                               width:32, height:18, borderRadius:9, position:"relative", flexShrink:0,
-                              background: active ? color : "rgba(255,255,255,0.1)", transition:"background .15s",
+                              background: active ? color : "rgba(0,0,0,0.12)", transition:"background .15s",
                               display:"inline-block",
                             }}>
                               <span style={{
@@ -782,7 +859,7 @@ export default function HomePage() {
                             onClick={e => e.stopPropagation()}
                             style={{
                               display:"flex", flexWrap:"wrap", gap:10, padding:"10px 12px",
-                              background:"rgba(255,255,255,0.03)",
+                              background:"rgba(0,0,0,0.02)",
                               border:`1px solid ${color}55`,
                               borderTop:"none", borderRadius:"0 0 6px 6px",
                             }}
@@ -877,7 +954,7 @@ export default function HomePage() {
                         style={{
                           marginTop:10, width:"100%", padding:"7px 0", borderRadius:6, fontSize:11,
                           fontWeight:600, cursor:"pointer", transition:"all .12s",
-                          background:"transparent", border:"1px solid rgba(255,255,255,0.1)",
+                          background:"transparent", border:"1px solid rgba(0,0,0,0.1)",
                           color:"var(--text-muted)",
                         }}
                       >
@@ -892,59 +969,377 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ══ CHART AREA ══════════════════════════════════════════════════════ */}
-      <div style={{ flex:1, position:"relative", overflow:"hidden" }}>
-        {error && (
-          <div style={{ position:"absolute", top:10, left:10, right:10, zIndex:20, padding:"9px 13px", borderRadius:6, fontSize:12, background:"rgba(244,63,94,0.1)", border:"1px solid rgba(244,63,94,0.3)", color:"#fca5a5" }}>
-            ⚠ {error}
-          </div>
-        )}
+      {/* ══ MAIN CONTENT ════════════════════════════════════════════════════ */}
+      <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
 
-        {isLoading && (
-          <div style={{ position:"absolute", inset:0, zIndex:10, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"rgba(5,8,16,0.9)", gap:12 }}>
-            <div className="spin" style={{ width:28, height:28, border:"2px solid var(--border-subtle)", borderTopColor:"var(--accent-cyan)", borderRadius:"50%" }} />
-            <span style={{ fontSize:11, color:"var(--text-muted)" }}>Loading candles…</span>
-          </div>
-        )}
+        {/* ── CHART (kiri, 60%) ─────────────────────────────────────────── */}
+        <div style={{ flex:"0 0 60%", position:"relative", borderRight:"1px solid var(--border-subtle)", display:"flex", flexDirection:"column" }}>
+          {error && (
+            <div style={{ position:"absolute", top:10, left:10, right:10, zIndex:20, padding:"9px 13px", borderRadius:6, fontSize:12, background:"rgba(220,38,38,0.08)", border:"1px solid rgba(220,38,38,0.25)", color:"#dc2626" }}>
+              ⚠ {error}
+            </div>
+          )}
+          {isLoading && (
+            <div style={{ position:"absolute", inset:0, zIndex:10, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"rgba(240,244,248,0.92)", gap:12 }}>
+              <div className="spin" style={{ width:28, height:28, border:"2px solid var(--border-subtle)", borderTopColor:"var(--accent-cyan)", borderRadius:"50%" }} />
+              <span style={{ fontSize:11, color:"var(--text-muted)" }}>Loading candles…</span>
+            </div>
+          )}
+          {!isLoading && candles.length === 0 && !error && (
+            <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ fontSize:12, color:"var(--text-muted)" }}>No data available</span>
+            </div>
+          )}
+          <div ref={containerRef} style={{ width:"100%", flex:1 }} />
+          <button
+            onClick={() => { if (chartRef.current) chartRef.current.timeScale().scrollToRealTime(); }}
+            style={{ position:"absolute", bottom:20, right:52, zIndex:30, background:"rgba(6,182,212,0.1)", color:"var(--accent-cyan)", border:"1px solid rgba(6,182,212,0.3)", padding:"4px 10px", borderRadius:5, fontSize:10, fontWeight:600, cursor:"pointer" }}
+          >Live ▶</button>
 
-        {!isLoading && candles.length === 0 && !error && (
-          <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <span style={{ fontSize:12, color:"var(--text-muted)" }}>No data available</span>
+          {/* Status bar bawah chart */}
+          <div style={{ height:22, flexShrink:0, borderTop:"1px solid var(--border-subtle)", background:"var(--bg-panel)", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 12px", fontSize:10, color:"var(--text-muted)" }}>
+            <div style={{ display:"flex", gap:12 }}>
+              <span>OKX · {wsStatus==="polling" ? "REST Polling" : "WebSocket v5"}</span>
+              <span>|</span>
+              <span>{candles.length} candles</span>
+              {liveCandle && <span style={{ color:"var(--green)", display:"flex", alignItems:"center", gap:4 }}><span className="pulse-dot" style={{ width:5,height:5,borderRadius:"50%",background:"var(--green)",display:"inline-block" }} />Live</span>}
+            </div>
+            <span>{instId} · {bar}</span>
           </div>
-        )}
+        </div>
 
-        <div ref={containerRef} style={{ width:"100%", height:"100%" }} />
-        <button
-          onClick={() => { if (chartRef.current) chartRef.current.timeScale().scrollToRealTime(); }}
-          style={{
-            position: "absolute", bottom: 24, right: 64, zIndex: 30,
-            background: "rgba(34,211,238,0.15)", color: "var(--accent-cyan)",
-            border: "1px solid rgba(34,211,238,0.3)",
-            padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
-            cursor: "pointer", backdropFilter: "blur(4px)"
-          }}
-        >
-          Kembali ke Awal &raquo;
-        </button>
+        {/* ── PANEL KANAN (40%) ─────────────────────────────────────────── */}
+        <RightPanel />
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// DUMMY DATA
+// ════════════════════════════════════════════════════════════════════════════
+const DUMMY_POSITIONS = [
+  { id:1, symbol:"BTC-USDT", side:"Long",  size:0.25,  entry:61420.0, current:63850.0, pnl:607.50,  pnlPct:2.48,  leverage:10, time:"2h 14m" },
+  { id:2, symbol:"ETH-USDT", side:"Short", size:1.80,  entry:3185.0,  current:3102.5,  pnl:148.50,  pnlPct:2.59,  leverage:5,  time:"47m" },
+  { id:3, symbol:"SOL-USDT", side:"Long",  size:12.0,  entry:142.30,  current:139.80,  pnl:-30.0,   pnlPct:-1.76, leverage:3,  time:"3h 02m" },
+];
+
+const DUMMY_CLOSED = [
+  { id:1,  date:"06 Apr 12:30", symbol:"BTC-USDT", side:"Long",  entry:60100, exit:62400, pnl:574.80,  pnlPct:3.82,  result:"win",  duration:"5h 12m" },
+  { id:2,  date:"06 Apr 08:15", symbol:"ETH-USDT", side:"Short", entry:3220,  exit:3095,  pnl:225.00,  pnlPct:3.88,  result:"win",  duration:"2h 47m" },
+  { id:3,  date:"05 Apr 21:00", symbol:"SOL-USDT", side:"Long",  entry:148.5, exit:141.2, pnl:-87.60,  pnlPct:-4.92, result:"loss", duration:"8h 33m" },
+  { id:4,  date:"05 Apr 16:45", symbol:"BTC-USDT", side:"Short", entry:63800, exit:62100, pnl:425.00,  pnlPct:2.66,  result:"win",  duration:"1h 20m" },
+  { id:5,  date:"05 Apr 11:10", symbol:"XRP-USDT", side:"Long",  entry:0.512, exit:0.498, pnl:-27.34,  pnlPct:-2.73, result:"loss", duration:"3h 05m" },
+  { id:6,  date:"04 Apr 19:30", symbol:"ETH-USDT", side:"Long",  entry:3050,  exit:3190,  pnl:252.00,  pnlPct:4.59,  result:"win",  duration:"6h 55m" },
+];
+
+const DUMMY_LOGS = [
+  { id:1,  time:"13:42:07", type:"signal",  msg:"BUY signal detected — RSI(14) oversold + BB bounce on BTC-USDT 1H",      color:"#059669" },
+  { id:2,  time:"13:42:09", type:"order",   msg:"LONG order placed — BTC-USDT 0.25 lots @ 61,420 USDT (10x leverage)",    color:"#2563eb" },
+  { id:3,  time:"13:42:10", type:"fill",    msg:"Order filled @ 61,422.5 — slippage 2.5 USDT",                             color:"#7c3aed" },
+  { id:4,  time:"11:18:33", type:"signal",  msg:"SHORT signal detected — MACD crossover bearish on ETH-USDT 15m",          color:"#dc2626" },
+  { id:5,  time:"11:18:35", type:"order",   msg:"SHORT order placed — ETH-USDT 1.80 lots @ 3,185 USDT (5x leverage)",     color:"#2563eb" },
+  { id:6,  time:"11:18:36", type:"fill",    msg:"Order filled @ 3,185.0 — no slippage",                                    color:"#7c3aed" },
+  { id:7,  time:"10:05:12", type:"ai",      msg:"AI self-review: Win rate dropped 4.2% on SOL scalp — adjusting TP/SL",   color:"#d97706" },
+  { id:8,  time:"09:30:00", type:"info",    msg:"Market session opened — volatility index HIGH (VIX equiv: 28.4)",         color:"#64748b" },
+  { id:9,  time:"08:15:44", type:"close",   msg:"Closed ETH-USDT SHORT @ 3,095 — PnL +225.00 USDT (+3.88%)",              color:"#059669" },
+  { id:10, time:"06:00:01", type:"ai",      msg:"AI model retrained on last 72h data — 847 new candles ingested",          color:"#d97706" },
+];
+
+const DUMMY_STATS = {
+  totalTrades: 142,
+  winRate: 67.6,
+  avgProfit: 312.40,
+  avgLoss: -148.20,
+  profitFactor: 2.11,
+  maxDrawdown: -8.34,
+  totalPnL: 18420.80,
+  sharpeRatio: 1.84,
+  avgDuration: "3h 28m",
+  bestTrade: 1840.50,
+  worstTrade: -620.00,
+  consecutiveWins: 7,
+  consecutiveLoss: 3,
+  aiAccuracy: 71.2,
+  aiImprovements: 24,
+  lastRetrain: "2h ago",
+};
+
+const DUMMY_CHAT = [
+  { role:"ai",   text:"Halo! Saya AI Trading Assistant Zyeeque. Saya menganalisis market secara real-time dan belajar dari setiap trade. Ada yang bisa saya bantu?" },
+  { role:"user", text:"Bagaimana kondisi BTC sekarang?" },
+  { role:"ai",   text:"BTC-USDT sedang dalam tren bullish jangka pendek. RSI(14) berada di 58 — belum overbought. MACD menunjukkan momentum positif. Saya merekomendasikan hold posisi long yang ada. TP level berikutnya: $64,500." },
+  { role:"user", text:"Berapa win rate AI saat ini?" },
+  { role:"ai",   text:"Win rate saya saat ini 67.6% dari 142 trade terakhir. Profit factor 2.11 — artinya setiap $1 risiko menghasilkan $2.11 return. Saya sudah melakukan 24 self-improvement cycle sejak deploy. Model terakhir diretrain 2 jam lalu dengan 847 candle baru." },
+];
+
+// ════════════════════════════════════════════════════════════════════════════
+// RIGHT PANEL COMPONENT
+// ════════════════════════════════════════════════════════════════════════════
+function RightPanel() {
+  const [chatInput, setChatInput] = useState("");
+  const [messages, setMessages]   = useState(DUMMY_CHAT);
+  const [activeTab, setActiveTab] = useState("positions");
+  const chatEndRef = useRef(null);
+
+  const sendMsg = () => {
+    const txt = chatInput.trim();
+    if (!txt) return;
+    setMessages(m => [...m, { role:"user", text:txt }, { role:"ai", text:"Sedang menganalisis... (ini adalah demo frontend — integrasi AI belum aktif)." }]);
+    setChatInput("");
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior:"smooth" }), 50);
+  };
+
+  const tabs = [
+    { id:"positions", label:"Open Pos.", count: DUMMY_POSITIONS.length },
+    { id:"closed",    label:"Closed",    count: DUMMY_CLOSED.length },
+    { id:"logs",      label:"Logs",      count: DUMMY_LOGS.length },
+    { id:"stats",     label:"Stats / AI" },
+  ];
+
+  return (
+    <div style={{ flex:"0 0 40%", display:"flex", flexDirection:"column", background:"var(--bg-surface)", minWidth:0 }}>
+
+      {/* ── CHATBOT ──────────────────────────────────────────────────────── */}
+      <div style={{ flex:"0 0 44%", display:"flex", flexDirection:"column", borderBottom:"1px solid var(--border-subtle)", minHeight:0 }}>
+        {/* Chat header */}
+        <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderBottom:"1px solid var(--border-subtle)", background:"var(--bg-panel)", flexShrink:0 }}>
+          <div style={{ width:28, height:28, borderRadius:8, background:"linear-gradient(135deg,#06b6d4,#7c3aed)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2C4.69 2 2 4.46 2 7.5c0 1.74.82 3.3 2.1 4.35V14l2.6-1.3A7.2 7.2 0 008 13c3.31 0 6-2.46 6-5.5S11.31 2 8 2z" fill="white"/></svg>
+          </div>
+          <div>
+            <div style={{ fontSize:12, fontWeight:700, color:"var(--text-primary)" }}>AI Trading Assistant</div>
+            <div style={{ fontSize:10, color:"var(--text-muted)", display:"flex", alignItems:"center", gap:4 }}>
+              <span style={{ width:5, height:5, borderRadius:"50%", background:"#059669", display:"inline-block" }} />
+              Online · Model v3.2 · Acc {DUMMY_STATS.aiAccuracy}%
+            </div>
+          </div>
+          <div style={{ marginLeft:"auto", fontSize:10, color:"var(--text-muted)", background:"rgba(6,182,212,0.08)", border:"1px solid rgba(6,182,212,0.2)", borderRadius:4, padding:"2px 7px" }}>
+            Retrained {DUMMY_STATS.lastRetrain}
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="scrollbar-thin" style={{ flex:1, overflowY:"auto", padding:"10px 14px", display:"flex", flexDirection:"column", gap:8, minHeight:0 }}>
+          {messages.map((m, i) => (
+            <div key={i} style={{ display:"flex", justifyContent: m.role==="user" ? "flex-end" : "flex-start" }}>
+              {m.role==="ai" && (
+                <div style={{ width:20, height:20, borderRadius:6, background:"linear-gradient(135deg,#06b6d4,#7c3aed)", flexShrink:0, marginRight:7, marginTop:2 }} />
+              )}
+              <div style={{
+                maxWidth:"78%", padding:"7px 11px", borderRadius: m.role==="user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                fontSize:11, lineHeight:1.5,
+                background: m.role==="user" ? "var(--accent-cyan)" : "var(--bg-panel)",
+                color: m.role==="user" ? "#fff" : "var(--text-primary)",
+                border: m.role==="user" ? "none" : "1px solid var(--border-subtle)",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+              }}>{m.text}</div>
+            </div>
+          ))}
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Input */}
+        <div style={{ display:"flex", gap:8, padding:"8px 10px", borderTop:"1px solid var(--border-subtle)", background:"var(--bg-panel)", flexShrink:0 }}>
+          <input
+            value={chatInput}
+            onChange={e => setChatInput(e.target.value)}
+            onKeyDown={e => e.key==="Enter" && sendMsg()}
+            placeholder="Tanya AI tentang market, strategi, posisi..."
+            style={{ flex:1, padding:"7px 10px", borderRadius:7, border:"1px solid var(--border-subtle)", fontSize:11, background:"var(--bg-surface)", color:"var(--text-primary)", outline:"none" }}
+          />
+          <button
+            onClick={sendMsg}
+            style={{ padding:"7px 14px", borderRadius:7, background:"var(--accent-cyan)", color:"#fff", border:"none", fontSize:11, fontWeight:700, cursor:"pointer" }}
+          >
+            ➤
+          </button>
+        </div>
       </div>
 
-      {/* ══ STATUS BAR ══════════════════════════════════════════════════════ */}
-      <div style={{
-        display:"flex", alignItems:"center", justifyContent:"space-between",
-        padding:"0 14px", height:24, flexShrink:0,
-        borderTop:"1px solid var(--border-subtle)", background:"var(--bg-panel)",
-        fontSize:10, color:"var(--text-muted)",
-      }}>
-        <div style={{ display:"flex", gap:14 }}>
-          <span>OKX Exchange · {wsStatus === "polling" ? "REST Polling (WS unavailable)" : "WebSocket v5 Business"}</span>
-          <span style={{ color:"var(--border-subtle)" }}>|</span>
-          <span>{candles.length} candles</span>
-          {liveCandle && <span style={{ color:"var(--green)", display:"flex", alignItems:"center", gap:4 }}><span className="pulse-dot" style={{ width:5, height:5, borderRadius:"50%", background:"var(--green)", display:"inline-block" }} />Live updating</span>}
+      {/* ── TRADING INFO ──────────────────────────────────────────────────── */}
+      <div style={{ flex:1, display:"flex", flexDirection:"column", minHeight:0 }}>
+        {/* Tabs */}
+        <div style={{ display:"flex", borderBottom:"1px solid var(--border-subtle)", background:"var(--bg-panel)", flexShrink:0 }}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+              flex:1, padding:"8px 4px", fontSize:11, fontWeight:600, cursor:"pointer", transition:"all .15s",
+              color: activeTab===t.id ? "var(--accent-cyan)" : "var(--text-muted)",
+              background:"transparent", borderBottom: activeTab===t.id ? "2px solid var(--accent-cyan)" : "2px solid transparent",
+              display:"flex", alignItems:"center", justifyContent:"center", gap:4,
+            }}>
+              {t.label}
+              {t.count !== undefined && (
+                <span style={{ minWidth:14, height:14, borderRadius:7, fontSize:9, fontWeight:700, background: activeTab===t.id ? "var(--accent-cyan)" : "rgba(0,0,0,0.1)", color: activeTab===t.id ? "#fff" : "var(--text-muted)", display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"0 3px" }}>{t.count}</span>
+              )}
+            </button>
+          ))}
         </div>
-        <div style={{ display:"flex", gap:14 }}>
-          <span>{instId} · {bar}</span>
-          <span style={{ color:"var(--border-subtle)" }}>|</span>
-          <span>lightweight-charts v4 · TradingView</span>
+
+        {/* Tab content */}
+        <div className="scrollbar-thin" style={{ flex:1, overflowY:"auto", minHeight:0 }}>
+
+          {/* ── Open Positions ── */}
+          {activeTab==="positions" && (
+            <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:6 }}>
+              {DUMMY_POSITIONS.map(p => (
+                <div key={p.id} style={{ background:"var(--bg-panel)", border:"1px solid var(--border-subtle)", borderRadius:8, padding:"10px 12px", display:"flex", flexDirection:"column", gap:6 }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                      <span style={{ fontSize:12, fontWeight:700, color:"var(--text-primary)" }}>{p.symbol}</span>
+                      <span style={{ fontSize:10, fontWeight:700, padding:"1px 6px", borderRadius:3, background: p.side==="Long" ? "rgba(5,150,105,0.12)" : "rgba(220,38,38,0.12)", color: p.side==="Long" ? "#059669" : "#dc2626" }}>{p.side}</span>
+                      <span style={{ fontSize:10, color:"var(--text-muted)" }}>{p.leverage}x</span>
+                    </div>
+                    <span style={{ fontSize:11, fontWeight:700, fontFamily:"'JetBrains Mono',monospace", color: p.pnl>=0 ? "#059669" : "#dc2626" }}>
+                      {p.pnl>=0?"+":""}{p.pnl.toFixed(2)} <span style={{ fontSize:10 }}>({p.pnlPct>=0?"+":""}{p.pnlPct.toFixed(2)}%)</span>
+                    </span>
+                  </div>
+                  <div style={{ display:"flex", gap:14 }}>
+                    {[["Size", p.size],["Entry", p.entry.toLocaleString()],["Current", p.current.toLocaleString()],["Time", p.time]].map(([l,v]) => (
+                      <div key={l} style={{ display:"flex", flexDirection:"column", gap:1 }}>
+                        <span style={{ fontSize:9, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.06em" }}>{l}</span>
+                        <span style={{ fontSize:11, fontFamily:"'JetBrains Mono',monospace", color:"var(--text-secondary)", fontWeight:500 }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {/* PnL bar */}
+                  <div style={{ height:3, background:"rgba(0,0,0,0.06)", borderRadius:2, overflow:"hidden" }}>
+                    <div style={{ height:"100%", width:`${Math.min(Math.abs(p.pnlPct)*8,100)}%`, background: p.pnl>=0?"#059669":"#dc2626", borderRadius:2 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Closed Trades ── */}
+          {activeTab==="closed" && (
+            <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
+              {DUMMY_CLOSED.map(t => (
+                <div key={t.id} style={{ background:"var(--bg-panel)", border:`1px solid ${t.result==="win" ? "rgba(5,150,105,0.2)" : "rgba(220,38,38,0.15)"}`, borderRadius:7, padding:"8px 12px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+                    <span style={{ width:6, height:6, borderRadius:"50%", background: t.result==="win"?"#059669":"#dc2626", flexShrink:0 }} />
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                        <span style={{ fontSize:11, fontWeight:700, color:"var(--text-primary)" }}>{t.symbol}</span>
+                        <span style={{ fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:3, background: t.side==="Long" ? "rgba(5,150,105,0.1)" : "rgba(220,38,38,0.1)", color: t.side==="Long" ? "#059669" : "#dc2626" }}>{t.side}</span>
+                      </div>
+                      <div style={{ fontSize:10, color:"var(--text-muted)", display:"flex", gap:6, marginTop:2 }}>
+                        <span>{t.date}</span>
+                        <span>·</span>
+                        <span>{t.duration}</span>
+                        <span>·</span>
+                        <span>{t.entry} → {t.exit}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign:"right", flexShrink:0 }}>
+                    <div style={{ fontSize:12, fontWeight:700, fontFamily:"'JetBrains Mono',monospace", color: t.pnl>=0?"#059669":"#dc2626" }}>
+                      {t.pnl>=0?"+":""}{t.pnl.toFixed(2)}
+                    </div>
+                    <div style={{ fontSize:10, color:"var(--text-muted)" }}>{t.pnlPct>=0?"+":""}{t.pnlPct.toFixed(2)}%</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Logs ── */}
+          {activeTab==="logs" && (
+            <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:3 }}>
+              {DUMMY_LOGS.map(l => (
+                <div key={l.id} style={{ display:"flex", gap:8, padding:"6px 10px", background:"var(--bg-panel)", borderRadius:6, border:"1px solid var(--border-subtle)", alignItems:"flex-start" }}>
+                  <span style={{ fontSize:9, fontFamily:"'JetBrains Mono',monospace", color:"var(--text-muted)", flexShrink:0, marginTop:1 }}>{l.time}</span>
+                  <span style={{ fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:3, background:`${l.color}18`, color:l.color, flexShrink:0, textTransform:"uppercase", letterSpacing:"0.04em" }}>{l.type}</span>
+                  <span style={{ fontSize:10, color:"var(--text-secondary)", lineHeight:1.4 }}>{l.msg}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Stats / AI ── */}
+          {activeTab==="stats" && (
+            <div style={{ padding:"10px" }}>
+              {/* Performance */}
+              <p style={{ fontSize:10, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>Performance</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6, marginBottom:12 }}>
+                {[
+                  ["Total PnL",    `+$${DUMMY_STATS.totalPnL.toLocaleString()}`, "#059669"],
+                  ["Win Rate",     `${DUMMY_STATS.winRate}%`,                    "#2563eb"],
+                  ["Total Trades", DUMMY_STATS.totalTrades,                       "var(--text-primary)"],
+                  ["Profit Factor",DUMMY_STATS.profitFactor,                       "#7c3aed"],
+                  ["Avg Profit",   `+$${DUMMY_STATS.avgProfit}`,                  "#059669"],
+                  ["Avg Loss",     `$${DUMMY_STATS.avgLoss}`,                     "#dc2626"],
+                  ["Max Drawdown", `${DUMMY_STATS.maxDrawdown}%`,                 "#dc2626"],
+                  ["Sharpe Ratio", DUMMY_STATS.sharpeRatio,                       "#2563eb"],
+                  ["Avg Duration", DUMMY_STATS.avgDuration,                       "var(--text-secondary)"],
+                  ["Best Trade",   `+$${DUMMY_STATS.bestTrade}`,                  "#059669"],
+                  ["Worst Trade",  `$${DUMMY_STATS.worstTrade}`,                  "#dc2626"],
+                  ["Avg Duration", DUMMY_STATS.avgDuration,                       "var(--text-muted)"],
+                ].map(([label, value, color]) => (
+                  <div key={label} style={{ background:"var(--bg-panel)", borderRadius:7, padding:"8px 10px", border:"1px solid var(--border-subtle)" }}>
+                    <div style={{ fontSize:9, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:3 }}>{label}</div>
+                    <div style={{ fontSize:13, fontWeight:700, fontFamily:"'JetBrains Mono',monospace", color }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Streak */}
+              <p style={{ fontSize:10, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>Streaks</p>
+              <div style={{ display:"flex", gap:6, marginBottom:12 }}>
+                <div style={{ flex:1, background:"rgba(5,150,105,0.08)", border:"1px solid rgba(5,150,105,0.2)", borderRadius:7, padding:"8px 10px" }}>
+                  <div style={{ fontSize:9, color:"#059669", textTransform:"uppercase", marginBottom:3 }}>Max Win Streak</div>
+                  <div style={{ fontSize:18, fontWeight:800, color:"#059669" }}>{DUMMY_STATS.consecutiveWins}🔥</div>
+                </div>
+                <div style={{ flex:1, background:"rgba(220,38,38,0.06)", border:"1px solid rgba(220,38,38,0.15)", borderRadius:7, padding:"8px 10px" }}>
+                  <div style={{ fontSize:9, color:"#dc2626", textTransform:"uppercase", marginBottom:3 }}>Max Loss Streak</div>
+                  <div style={{ fontSize:18, fontWeight:800, color:"#dc2626" }}>{DUMMY_STATS.consecutiveLoss}</div>
+                </div>
+              </div>
+
+              {/* AI Self-Learning */}
+              <p style={{ fontSize:10, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>AI Self-Learning</p>
+              <div style={{ background:"linear-gradient(135deg,rgba(6,182,212,0.06),rgba(124,58,237,0.06))", border:"1px solid rgba(6,182,212,0.2)", borderRadius:8, padding:"12px" }}>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
+                  {[
+                    ["Model Accuracy",  `${DUMMY_STATS.aiAccuracy}%`,     "#06b6d4"],
+                    ["Improvements",    `${DUMMY_STATS.aiImprovements}x`, "#7c3aed"],
+                    ["Last Retrain",    DUMMY_STATS.lastRetrain,           "#d97706"],
+                    ["Data Points",     "12,847",                          "var(--text-secondary)"],
+                  ].map(([l,v,c]) => (
+                    <div key={l}>
+                      <div style={{ fontSize:9, color:"var(--text-muted)", textTransform:"uppercase", marginBottom:2 }}>{l}</div>
+                      <div style={{ fontSize:14, fontWeight:700, fontFamily:"'JetBrains Mono',monospace", color:c }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Accuracy bar */}
+                <div>
+                  <div style={{ display:"flex", justifyContent:"space-between", fontSize:9, color:"var(--text-muted)", marginBottom:4 }}>
+                    <span>Model Accuracy Over Time</span>
+                    <span>{DUMMY_STATS.aiAccuracy}%</span>
+                  </div>
+                  <div style={{ height:6, background:"rgba(0,0,0,0.08)", borderRadius:3, overflow:"hidden" }}>
+                    <div style={{ height:"100%", width:`${DUMMY_STATS.aiAccuracy}%`, background:"linear-gradient(90deg,#06b6d4,#7c3aed)", borderRadius:3, transition:"width .5s" }} />
+                  </div>
+                </div>
+
+                {/* Feature importance dummy */}
+                <div style={{ marginTop:10 }}>
+                  <div style={{ fontSize:9, color:"var(--text-muted)", textTransform:"uppercase", marginBottom:6 }}>Feature Importance</div>
+                  {[["RSI",72],["MACD",58],["Volume",51],["BB",44],["SuperTrend",39]].map(([feat,score]) => (
+                    <div key={feat} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                      <span style={{ fontSize:10, color:"var(--text-secondary)", width:72 }}>{feat}</span>
+                      <div style={{ flex:1, height:4, background:"rgba(0,0,0,0.07)", borderRadius:2, overflow:"hidden" }}>
+                        <div style={{ height:"100%", width:`${score}%`, background:"linear-gradient(90deg,#06b6d4,#7c3aed)", borderRadius:2 }} />
+                      </div>
+                      <span style={{ fontSize:9, fontFamily:"'JetBrains Mono',monospace", color:"var(--text-muted)", width:24 }}>{score}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
