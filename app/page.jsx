@@ -118,6 +118,30 @@ export default function HomePage() {
   const [indRibbon,  setIndRibbon]  = useState(false);  // EMA Ribbon
   const [indVWAP,    setIndVWAP]    = useState(false);  // VWAP
 
+  // indicator settings — nilai parameter yang bisa diubah user
+  const [indSettings, setIndSettings] = useState({
+    ma7:   { period: 7 },
+    ma25:  { period: 25 },
+    ma99:  { period: 99 },
+    bb:    { period: 20, stdDev: 2 },
+    rsi:   { period: 14, ob: 70, os: 30 },
+    macd:  { fast: 12, slow: 26, signal: 9 },
+    st:    { period: 10, multiplier: 3 },
+    stoch: { rsiPeriod: 14, stochPeriod: 14, kPeriod: 3, dPeriod: 3 },
+    wr:    { period: 14 },
+    cci:   { period: 20 },
+  });
+
+  // helper: update satu field dalam indSettings
+  const setSetting = useCallback((key, field, raw) => {
+    const val = field === "multiplier" ? parseFloat(raw) : parseInt(raw, 10);
+    if (isNaN(val) || val <= 0) return;
+    setIndSettings(prev => ({ ...prev, [key]: { ...prev[key], [field]: val } }));
+  }, []);
+
+  // indikator mana yang sedang expand settings-nya
+  const [expandedSetting, setExpandedSetting] = useState(null);
+
   // chart refs
   const containerRef = useRef(null);
   const chartRef     = useRef(null);
@@ -224,24 +248,24 @@ export default function HomePage() {
       // ── MA 7 ──
       if (indMA7) {
         sm.ma7 = chart.addLineSeries({ color:C.ma7, lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
-        sm.ma7.setData(toSeries(times, calcSMA(closes, 7)));
+        sm.ma7.setData(toSeries(times, calcSMA(closes, indSettings.ma7.period)));
       }
 
       // ── MA 25 ──
       if (indMA25) {
         sm.ma25 = chart.addLineSeries({ color:C.ma25, lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
-        sm.ma25.setData(toSeries(times, calcSMA(closes, 25)));
+        sm.ma25.setData(toSeries(times, calcSMA(closes, indSettings.ma25.period)));
       }
 
       // ── MA 99 ──
       if (indMA99) {
         sm.ma99 = chart.addLineSeries({ color:C.ma99, lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
-        sm.ma99.setData(toSeries(times, calcSMA(closes, 99)));
+        sm.ma99.setData(toSeries(times, calcSMA(closes, indSettings.ma99.period)));
       }
 
       // ── Bollinger Bands ──
       if (indBB) {
-        const bb = calcBB(closes, 20, 2);
+        const bb = calcBB(closes, indSettings.bb.period, indSettings.bb.stdDev);
         sm.bbUpper = chart.addLineSeries({ color:C.bbUpper, lineWidth:1, lineStyle:LineStyle.Dashed, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
         sm.bbMid   = chart.addLineSeries({ color:C.bbMid,   lineWidth:1, lineStyle:LineStyle.Dotted, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
         sm.bbLower = chart.addLineSeries({ color:C.bbLower, lineWidth:1, lineStyle:LineStyle.Dashed, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
@@ -269,7 +293,7 @@ export default function HomePage() {
 
       // ── SuperTrend ──
       if (indST) {
-        const { supertrend, direction } = calcSuperTrend(highs, lows, closes, 10, 3);
+        const { supertrend, direction } = calcSuperTrend(highs, lows, closes, indSettings.st.period, indSettings.st.multiplier);
         // Split into bullish (green) and bearish (red) segments
         const bullData = [], bearData = [];
         times.forEach((t, i) => {
@@ -285,7 +309,7 @@ export default function HomePage() {
 
       // ── RSI pane ──
       if (indRSI) {
-        const rsiVals = calcRSI(closes, 14);
+        const rsiVals = calcRSI(closes, indSettings.rsi.period);
         sm.rsi = chart.addLineSeries({
           color:C.rsiLine, lineWidth:1, priceScaleId:"rsi",
           priceLineVisible:false, lastValueVisible:true, crosshairMarkerVisible:false,
@@ -297,14 +321,14 @@ export default function HomePage() {
           const t0 = rsiValid[0].time, t1 = rsiValid[rsiValid.length-1].time;
           sm.rsi70 = chart.addLineSeries({ color:C.rsi70, lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"rsi", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
           sm.rsi30 = chart.addLineSeries({ color:C.rsi30, lineWidth:1, lineStyle:LineStyle.Dashed, priceScaleId:"rsi", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
-          sm.rsi70.setData([{ time:t0, value:70 },{ time:t1, value:70 }]);
-          sm.rsi30.setData([{ time:t0, value:30 },{ time:t1, value:30 }]);
+          sm.rsi70.setData([{ time:t0, value:indSettings.rsi.ob },{ time:t1, value:indSettings.rsi.ob }]);
+          sm.rsi30.setData([{ time:t0, value:indSettings.rsi.os },{ time:t1, value:indSettings.rsi.os }]);
         }
       }
 
       // ── Stoch RSI pane ──
       if (indStoch) {
-        const { k, d } = calcStochRSI(closes);
+        const { k, d } = calcStochRSI(closes, indSettings.stoch.rsiPeriod, indSettings.stoch.stochPeriod, indSettings.stoch.kPeriod, indSettings.stoch.dPeriod);
         sm.stochK = chart.addLineSeries({ color:C.stochK, lineWidth:1, priceScaleId:"stoch", priceLineVisible:false, lastValueVisible:true, crosshairMarkerVisible:false, title:"%K" });
         sm.stochD = chart.addLineSeries({ color:C.stochD, lineWidth:1, priceScaleId:"stoch", priceLineVisible:false, lastValueVisible:true, crosshairMarkerVisible:false, title:"%D" });
         chart.priceScale("stoch").applyOptions({ scaleMargins:{ top:0.78, bottom:0.02 }, autoScale:false, minimum:0, maximum:100 });
@@ -322,7 +346,7 @@ export default function HomePage() {
 
       // ── Williams %R pane ──
       if (indWR) {
-        const wrVals = calcWilliamsR(highs, lows, closes, 14);
+        const wrVals = calcWilliamsR(highs, lows, closes, indSettings.wr.period);
         sm.wr = chart.addLineSeries({ color:C.wr, lineWidth:1, priceScaleId:"wr", priceLineVisible:false, lastValueVisible:true, crosshairMarkerVisible:false, title:"%R" });
         chart.priceScale("wr").applyOptions({ scaleMargins:{ top:0.82, bottom:0.02 }, autoScale:false, minimum:-100, maximum:0 });
         sm.wr.setData(toSeries(times, wrVals));
@@ -338,7 +362,7 @@ export default function HomePage() {
 
       // ── CCI pane ──
       if (indCCI) {
-        const cciVals = calcCCI(highs, lows, closes, 20);
+        const cciVals = calcCCI(highs, lows, closes, indSettings.cci.period);
         sm.cci = chart.addLineSeries({ color:C.cci, lineWidth:1, priceScaleId:"cci", priceLineVisible:false, lastValueVisible:true, crosshairMarkerVisible:false, title:"CCI" });
         chart.priceScale("cci").applyOptions({ scaleMargins:{ top:0.85, bottom:0.02 } });
         sm.cci.setData(toSeries(times, cciVals));
@@ -354,7 +378,7 @@ export default function HomePage() {
 
       // ── MACD pane ──
       if (indMACD) {
-        const { macdLine, signalLine, histogram } = calcMACD(closes);
+        const { macdLine, signalLine, histogram } = calcMACD(closes, indSettings.macd.fast, indSettings.macd.slow, indSettings.macd.signal);
         sm.macd     = chart.addLineSeries({ color:C.macd, lineWidth:1, priceScaleId:"macd", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
         sm.macdSig  = chart.addLineSeries({ color:C.signal, lineWidth:1, priceScaleId:"macd", priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
         sm.macdHist = chart.addHistogramSeries({ priceScaleId:"macd", priceLineVisible:false, lastValueVisible:false });
@@ -377,7 +401,7 @@ export default function HomePage() {
 
     return () => { if (ro) ro.disconnect(); };
   }, [historyHash, chartType, indMA7, indMA25, indMA99, indBB, indVol, indRSI, indMACD,
-      indST, indStoch, indWR, indCCI, indRibbon, indVWAP]);
+      indST, indStoch, indWR, indCCI, indRibbon, indVWAP, indSettings]);
 
   // ── WebSocket (with connection timeout + REST fallback) ───────────────────
   useEffect(() => {
@@ -664,8 +688,9 @@ export default function HomePage() {
               <div style={{
                 position:"absolute", top:"calc(100% + 6px)", right:0, zIndex:50,
                 background:"#0f1724", border:"1px solid rgba(255,255,255,0.1)",
-                borderRadius:10, padding:"16px", width:300,
+                borderRadius:10, padding:"16px", width:320,
                 boxShadow:"0 16px 48px rgba(0,0,0,0.6)",
+                maxHeight:"80vh", overflowY:"auto",
               }}>
                 {/* Header */}
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
@@ -673,76 +698,194 @@ export default function HomePage() {
                   <button onClick={() => setShowIndPanel(false)} style={{ width:20, height:20, borderRadius:4, border:"1px solid var(--border-subtle)", background:"transparent", cursor:"pointer", color:"var(--text-muted)", fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>×</button>
                 </div>
 
-                {/* Overlay */}
-                <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                  {/* Section: Overlays */}
-                  <p style={{ fontSize:10, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:4, marginTop:2 }}>Overlays (main chart)</p>
-                  {[
-                    { label:"MA 7",         color:C.ma7,       active:indMA7,    set:setIndMA7    },
-                    { label:"MA 25",        color:C.ma25,      active:indMA25,   set:setIndMA25   },
-                    { label:"MA 99",        color:C.ma99,      active:indMA99,   set:setIndMA99   },
-                    { label:"Bollinger Bands (20,2)", color:C.bbUpper, active:indBB, set:setIndBB },
-                    { label:"Volume",       color:"#aaaaaa",   active:indVol,    set:setIndVol    },
-                    { label:"VWAP",         color:C.vwap,      active:indVWAP,   set:setIndVWAP   },
-                    { label:"EMA Ribbon (8/13/21/34/55)", color:C.ribbon[2], active:indRibbon, set:setIndRibbon },
-                    { label:"SuperTrend (10,3)", color:C.stBull, active:indST,  set:setIndST     },
-                  ].map(({ label, color, active, set }) => (
-                    <button key={label} onClick={() => set(v => !v)} style={{
-                      display:"flex", alignItems:"center", justifyContent:"space-between",
-                      padding:"8px 10px", borderRadius:6, cursor:"pointer", transition:"all .12s",
-                      background: active ? `${color}14` : "transparent",
-                      border: `1px solid ${active ? color + "55" : "rgba(255,255,255,0.06)"}`,
-                    }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <span style={{ width:10, height:10, borderRadius:3, background:color, flexShrink:0, opacity: active ? 1 : 0.35 }} />
-                        <span style={{ fontSize:12, color: active ? "var(--text-primary)" : "var(--text-muted)", fontWeight: active ? 500 : 400 }}>{label}</span>
-                      </div>
-                      {/* Toggle */}
-                      <span style={{
-                        width:32, height:18, borderRadius:9, position:"relative", flexShrink:0,
-                        background: active ? color : "rgba(255,255,255,0.1)", transition:"background .15s",
-                        display:"inline-block",
-                      }}>
-                        <span style={{
-                          position:"absolute", top:3, left: active ? 17 : 3, width:12, height:12,
-                          borderRadius:"50%", background:"#fff", transition:"left .15s",
-                        }} />
-                      </span>
-                    </button>
-                  ))}
+                {/* ── helper sub-components (inline) ──────────────────────── */}
+                {(() => {
+                  // Number input field for settings
+                  const NumInput = ({ label, value, onChange, step = 1, min = 1 }) => (
+                    <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
+                      <span style={{ fontSize:9, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.08em" }}>{label}</span>
+                      <input
+                        type="number"
+                        value={value}
+                        min={min}
+                        step={step}
+                        onChange={e => onChange(e.target.value)}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          width:54, padding:"3px 6px", borderRadius:4, fontSize:11,
+                          fontFamily:"'JetBrains Mono', monospace", fontWeight:600,
+                          background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)",
+                          color:"var(--text-primary)", outline:"none",
+                          WebkitAppearance:"none", MozAppearance:"textfield",
+                        }}
+                      />
+                    </div>
+                  );
 
-                  {/* Section: Oscillators */}
-                  <p style={{ fontSize:10, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:4, marginTop:10 }}>Oscillators (sub-panel)</p>
-                  {[
-                    { label:"RSI (14)",          color:C.rsiLine, active:indRSI,   set:setIndRSI   },
-                    { label:"MACD (12,26,9)",     color:C.macd,    active:indMACD,  set:setIndMACD  },
-                    { label:"Stochastic RSI",     color:C.stochK,  active:indStoch, set:setIndStoch },
-                    { label:"Williams %R (14)",   color:C.wr,      active:indWR,    set:setIndWR    },
-                    { label:"CCI (20)",           color:C.cci,     active:indCCI,   set:setIndCCI   },
-                  ].map(({ label, color, active, set }) => (
-                    <button key={label} onClick={() => set(v => !v)} style={{
-                      display:"flex", alignItems:"center", justifyContent:"space-between",
-                      padding:"8px 10px", borderRadius:6, cursor:"pointer", transition:"all .12s",
-                      background: active ? `${color}14` : "transparent",
-                      border: `1px solid ${active ? color + "55" : "rgba(255,255,255,0.06)"}`,
-                    }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <span style={{ width:10, height:10, borderRadius:3, background:color, flexShrink:0, opacity: active ? 1 : 0.35 }} />
-                        <span style={{ fontSize:12, color: active ? "var(--text-primary)" : "var(--text-muted)", fontWeight: active ? 500 : 400 }}>{label}</span>
+                  // Row for each indicator with toggle + gear icon + optional settings panel
+                  const IndRow = ({ id, label, color, active, onToggle, children }) => {
+                    const isExpanded = expandedSetting === id;
+                    return (
+                      <div style={{ marginBottom:3 }}>
+                        <button
+                          onClick={onToggle}
+                          style={{
+                            display:"flex", alignItems:"center", justifyContent:"space-between",
+                            width:"100%", padding:"8px 10px", borderRadius:isExpanded ? "6px 6px 0 0" : 6,
+                            cursor:"pointer", transition:"all .12s",
+                            background: active ? `${color}14` : "transparent",
+                            border: `1px solid ${active ? color + "55" : "rgba(255,255,255,0.06)"}`,
+                            borderBottom: isExpanded ? "none" : undefined,
+                          }}
+                        >
+                          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                            <span style={{ width:10, height:10, borderRadius:3, background:color, flexShrink:0, opacity: active ? 1 : 0.35 }} />
+                            <span style={{ fontSize:12, color: active ? "var(--text-primary)" : "var(--text-muted)", fontWeight: active ? 500 : 400 }}>{label}</span>
+                          </div>
+                          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                            {/* Gear icon — toggle settings */}
+                            {children && (
+                              <span
+                                onClick={e => { e.stopPropagation(); setExpandedSetting(isExpanded ? null : id); }}
+                                title="Settings"
+                                style={{
+                                  display:"flex", alignItems:"center", justifyContent:"center",
+                                  width:20, height:20, borderRadius:4, cursor:"pointer",
+                                  background: isExpanded ? "rgba(255,255,255,0.12)" : "transparent",
+                                  color: isExpanded ? "var(--text-primary)" : "var(--text-muted)",
+                                  transition:"all .12s",
+                                }}
+                              >
+                                <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+                                  <circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+                                  <path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.93 2.93l1.41 1.41M9.66 9.66l1.41 1.41M2.93 11.07l1.41-1.41M9.66 4.34l1.41-1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                </svg>
+                              </span>
+                            )}
+                            {/* Toggle switch */}
+                            <span style={{
+                              width:32, height:18, borderRadius:9, position:"relative", flexShrink:0,
+                              background: active ? color : "rgba(255,255,255,0.1)", transition:"background .15s",
+                              display:"inline-block",
+                            }}>
+                              <span style={{
+                                position:"absolute", top:3, left: active ? 17 : 3, width:12, height:12,
+                                borderRadius:"50%", background:"#fff", transition:"left .15s",
+                              }} />
+                            </span>
+                          </div>
+                        </button>
+
+                        {/* Settings panel — expands below row */}
+                        {isExpanded && children && (
+                          <div
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                              display:"flex", flexWrap:"wrap", gap:10, padding:"10px 12px",
+                              background:"rgba(255,255,255,0.03)",
+                              border:`1px solid ${color}55`,
+                              borderTop:"none", borderRadius:"0 0 6px 6px",
+                            }}
+                          >
+                            {children}
+                          </div>
+                        )}
                       </div>
-                      <span style={{
-                        width:32, height:18, borderRadius:9, position:"relative", flexShrink:0,
-                        background: active ? color : "rgba(255,255,255,0.1)", transition:"background .15s",
-                        display:"inline-block",
-                      }}>
-                        <span style={{
-                          position:"absolute", top:3, left: active ? 17 : 3, width:12, height:12,
-                          borderRadius:"50%", background:"#fff", transition:"left .15s",
-                        }} />
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                    );
+                  };
+
+                  return (
+                    <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                      {/* ── Overlays ── */}
+                      <p style={{ fontSize:10, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:4, marginTop:2 }}>Overlays (main chart)</p>
+
+                      <IndRow id="ma7" label="MA 7" color={C.ma7} active={indMA7} onToggle={() => setIndMA7(v => !v)}>
+                        <NumInput label="Period" value={indSettings.ma7.period} onChange={v => setSetting("ma7","period",v)} />
+                      </IndRow>
+
+                      <IndRow id="ma25" label="MA 25" color={C.ma25} active={indMA25} onToggle={() => setIndMA25(v => !v)}>
+                        <NumInput label="Period" value={indSettings.ma25.period} onChange={v => setSetting("ma25","period",v)} />
+                      </IndRow>
+
+                      <IndRow id="ma99" label="MA 99" color={C.ma99} active={indMA99} onToggle={() => setIndMA99(v => !v)}>
+                        <NumInput label="Period" value={indSettings.ma99.period} onChange={v => setSetting("ma99","period",v)} />
+                      </IndRow>
+
+                      <IndRow id="bb" label="Bollinger Bands" color={C.bbUpper} active={indBB} onToggle={() => setIndBB(v => !v)}>
+                        <NumInput label="Period" value={indSettings.bb.period} onChange={v => setSetting("bb","period",v)} />
+                        <NumInput label="Std Dev" value={indSettings.bb.stdDev} onChange={v => setSetting("bb","stdDev",v)} min={0.1} step={0.5} />
+                      </IndRow>
+
+                      <IndRow id="vol" label="Volume" color="#aaaaaa" active={indVol} onToggle={() => setIndVol(v => !v)} />
+
+                      <IndRow id="vwap" label="VWAP" color={C.vwap} active={indVWAP} onToggle={() => setIndVWAP(v => !v)} />
+
+                      <IndRow id="ribbon" label="EMA Ribbon (8/13/21/34/55)" color={C.ribbon[2]} active={indRibbon} onToggle={() => setIndRibbon(v => !v)} />
+
+                      <IndRow id="st" label="SuperTrend" color={C.stBull} active={indST} onToggle={() => setIndST(v => !v)}>
+                        <NumInput label="Period" value={indSettings.st.period} onChange={v => setSetting("st","period",v)} />
+                        <NumInput label="Multiplier" value={indSettings.st.multiplier} onChange={v => setSetting("st","multiplier",v)} min={0.1} step={0.5} />
+                      </IndRow>
+
+                      {/* ── Oscillators ── */}
+                      <p style={{ fontSize:10, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:4, marginTop:10 }}>Oscillators (sub-panel)</p>
+
+                      <IndRow id="rsi" label="RSI" color={C.rsiLine} active={indRSI} onToggle={() => setIndRSI(v => !v)}>
+                        <NumInput label="Period" value={indSettings.rsi.period} onChange={v => setSetting("rsi","period",v)} />
+                        <NumInput label="Overbought" value={indSettings.rsi.ob} onChange={v => setSetting("rsi","ob",v)} />
+                        <NumInput label="Oversold" value={indSettings.rsi.os} onChange={v => setSetting("rsi","os",v)} />
+                      </IndRow>
+
+                      <IndRow id="macd" label="MACD" color={C.macd} active={indMACD} onToggle={() => setIndMACD(v => !v)}>
+                        <NumInput label="Fast" value={indSettings.macd.fast} onChange={v => setSetting("macd","fast",v)} />
+                        <NumInput label="Slow" value={indSettings.macd.slow} onChange={v => setSetting("macd","slow",v)} />
+                        <NumInput label="Signal" value={indSettings.macd.signal} onChange={v => setSetting("macd","signal",v)} />
+                      </IndRow>
+
+                      <IndRow id="stoch" label="Stochastic RSI" color={C.stochK} active={indStoch} onToggle={() => setIndStoch(v => !v)}>
+                        <NumInput label="RSI" value={indSettings.stoch.rsiPeriod} onChange={v => setSetting("stoch","rsiPeriod",v)} />
+                        <NumInput label="Stoch" value={indSettings.stoch.stochPeriod} onChange={v => setSetting("stoch","stochPeriod",v)} />
+                        <NumInput label="%K" value={indSettings.stoch.kPeriod} onChange={v => setSetting("stoch","kPeriod",v)} />
+                        <NumInput label="%D" value={indSettings.stoch.dPeriod} onChange={v => setSetting("stoch","dPeriod",v)} />
+                      </IndRow>
+
+                      <IndRow id="wr" label="Williams %R" color={C.wr} active={indWR} onToggle={() => setIndWR(v => !v)}>
+                        <NumInput label="Period" value={indSettings.wr.period} onChange={v => setSetting("wr","period",v)} />
+                      </IndRow>
+
+                      <IndRow id="cci" label="CCI" color={C.cci} active={indCCI} onToggle={() => setIndCCI(v => !v)}>
+                        <NumInput label="Period" value={indSettings.cci.period} onChange={v => setSetting("cci","period",v)} />
+                      </IndRow>
+
+                      {/* Reset all to default */}
+                      <button
+                        onClick={() => {
+                          setIndSettings({
+                            ma7:   { period: 7 },
+                            ma25:  { period: 25 },
+                            ma99:  { period: 99 },
+                            bb:    { period: 20, stdDev: 2 },
+                            rsi:   { period: 14, ob: 70, os: 30 },
+                            macd:  { fast: 12, slow: 26, signal: 9 },
+                            st:    { period: 10, multiplier: 3 },
+                            stoch: { rsiPeriod: 14, stochPeriod: 14, kPeriod: 3, dPeriod: 3 },
+                            wr:    { period: 14 },
+                            cci:   { period: 20 },
+                          });
+                          setExpandedSetting(null);
+                        }}
+                        style={{
+                          marginTop:10, width:"100%", padding:"7px 0", borderRadius:6, fontSize:11,
+                          fontWeight:600, cursor:"pointer", transition:"all .12s",
+                          background:"transparent", border:"1px solid rgba(255,255,255,0.1)",
+                          color:"var(--text-muted)",
+                        }}
+                      >
+                        ↺ Reset all to default
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             </>
           )}
