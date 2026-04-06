@@ -90,6 +90,7 @@ function StatCell({ label, value, color }) {
 
 // ─── main ──────────────────────────────────────────────────────────────────
 export default function HomePage() {
+  const [theme, setTheme]     = useState("dark");
   const [instId, setInstId]   = useState(OKX_DEFAULT_PAIR);
   const [bar, setBar]         = useState(OKX_DEFAULT_BAR);
   const [candles, setCandles] = useState([]);
@@ -157,7 +158,12 @@ export default function HomePage() {
   const goneRef       = useRef(false);
   const pollRef       = useRef(null); // REST polling fallback
 
-  // ── history ──────────────────────────────────────────────────────────────
+  // ── theme ─────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  // ── history ───────────────────────────────────────────────────────────────
   useEffect(() => {
     let gone = false;
     const ctrl = new AbortController();
@@ -184,19 +190,20 @@ export default function HomePage() {
 
       if (chartRef.current) { chartRef.current.remove(); chartRef.current = null; seriesMap.current = {}; }
 
+      const isDark = theme === "dark";
       const chart = createChart(el, {
         width: el.clientWidth,
         height: el.clientHeight,
-        layout:    { background:{ color:"transparent" }, textColor:"#64748b", fontSize:11, fontFamily:"'JetBrains Mono', monospace" },
-        grid:      { vertLines:{ color:"rgba(0,0,0,0.05)" }, horzLines:{ color:"rgba(0,0,0,0.05)" } },
+        layout:    { background:{ color:"transparent" }, textColor: isDark ? "#64748b" : "#64748b", fontSize:11, fontFamily:"'JetBrains Mono', monospace" },
+        grid:      { vertLines:{ color: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)" }, horzLines:{ color: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)" } },
         crosshair: {
           mode: CrosshairMode.Normal,
-          vertLine: { color:"rgba(0,0,0,0.35)", width:1, style:LineStyle.Dashed, labelBackgroundColor:"#e2e8f0" },
-          horzLine: { color:"rgba(0,0,0,0.35)", width:1, style:LineStyle.Dashed, labelBackgroundColor:"#e2e8f0" },
+          vertLine: { color: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.35)", width:1, style:LineStyle.Dashed, labelBackgroundColor: isDark ? "#1e293b" : "#e2e8f0" },
+          horzLine: { color: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.35)", width:1, style:LineStyle.Dashed, labelBackgroundColor: isDark ? "#1e293b" : "#e2e8f0" },
         },
-        rightPriceScale: { borderColor:"rgba(0,0,0,0.08)", scaleMargins:{ top:0.08, bottom: indVol ? 0.28 : 0.05 } },
+        rightPriceScale: { borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)", scaleMargins:{ top:0.08, bottom: indVol ? 0.28 : 0.05 } },
         timeScale: {
-          borderColor:"rgba(0,0,0,0.08)", timeVisible:true, secondsVisible:false,
+          borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)", timeVisible:true, secondsVisible:false,
           tickMarkFormatter: t => {
             const d = new Date(t * 1000);
             return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
@@ -479,7 +486,7 @@ export default function HomePage() {
 
     return () => { if (ro) ro.disconnect(); };
   }, [historyHash, chartType, indMA7, indMA25, indMA99, indBB, indVol, indRSI, indMACD,
-      indST, indStoch, indWR, indCCI, indRibbon, indVWAP, indSettings]);
+      indST, indStoch, indWR, indCCI, indRibbon, indVWAP, indSettings, theme]);
 
   // ── WebSocket (with connection timeout + REST fallback) ───────────────────
   useEffect(() => {
@@ -672,6 +679,56 @@ export default function HomePage() {
         </div>
 
         <div style={{ flex:1 }} />
+
+        {/* Theme toggle */}
+        <button
+          onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          style={{
+            display:"flex", alignItems:"center", justifyContent:"center",
+            width:32, height:32, borderRadius:6, margin:"0 4px",
+            background:"var(--bg-hover)", border:"1px solid var(--border-subtle)",
+            color:"var(--text-secondary)", cursor:"pointer", flexShrink:0,
+            transition:"all .2s",
+          }}
+        >
+          {theme === "dark" ? (
+            /* Sun icon */
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          ) : (
+            /* Moon icon */
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          )}
+        </button>
+
+        {/* Logout */}
+        <button
+          onClick={async () => {
+            await fetch("/api/auth/logout", { method:"POST" });
+            window.location.href = "/login";
+          }}
+          title="Keluar"
+          style={{
+            display:"flex", alignItems:"center", justifyContent:"center",
+            width:32, height:32, borderRadius:6, margin:"0 4px 0 0",
+            background:"var(--bg-hover)", border:"1px solid var(--border-subtle)",
+            color:"var(--text-muted)", cursor:"pointer", flexShrink:0,
+            transition:"all .2s",
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
 
         {/* WS status */}
         <div style={{ display:"flex", alignItems:"center", gap:6, padding:"0 14px", borderLeft:"1px solid var(--border-subtle)", height:"100%", fontSize:11, color:"var(--text-muted)" }}>
@@ -980,7 +1037,7 @@ export default function HomePage() {
             </div>
           )}
           {isLoading && (
-            <div style={{ position:"absolute", inset:0, zIndex:10, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"rgba(240,244,248,0.92)", gap:12 }}>
+            <div style={{ position:"absolute", inset:0, zIndex:10, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background: theme==="dark" ? "rgba(8,13,23,0.92)" : "rgba(240,244,248,0.92)", gap:12 }}>
               <div className="spin" style={{ width:28, height:28, border:"2px solid var(--border-subtle)", borderTopColor:"var(--accent-cyan)", borderRadius:"50%" }} />
               <span style={{ fontSize:11, color:"var(--text-muted)" }}>Loading candles…</span>
             </div>
@@ -1274,9 +1331,8 @@ function RightPanel() {
                   ["Avg Duration", DUMMY_STATS.avgDuration,                       "var(--text-secondary)"],
                   ["Best Trade",   `+$${DUMMY_STATS.bestTrade}`,                  "#059669"],
                   ["Worst Trade",  `$${DUMMY_STATS.worstTrade}`,                  "#dc2626"],
-                  ["Avg Duration", DUMMY_STATS.avgDuration,                       "var(--text-muted)"],
-                ].map(([label, value, color]) => (
-                  <div key={label} style={{ background:"var(--bg-panel)", borderRadius:7, padding:"8px 10px", border:"1px solid var(--border-subtle)" }}>
+                ].map(([label, value, color], index) => (
+                  <div key={index} style={{ background:"var(--bg-panel)", borderRadius:7, padding:"8px 10px", border:"1px solid var(--border-subtle)" }}>
                     <div style={{ fontSize:9, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:3 }}>{label}</div>
                     <div style={{ fontSize:13, fontWeight:700, fontFamily:"'JetBrains Mono',monospace", color }}>{value}</div>
                   </div>

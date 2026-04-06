@@ -26,6 +26,22 @@
     --orange: #ea580c;
   }
 
+  [data-theme="dark"] {
+    --bg-deep: #080d17;
+    --bg-panel: #0f1623;
+    --bg-surface: #161e2e;
+    --bg-hover: rgba(255,255,255,0.04);
+    --border-subtle: rgba(255,255,255,0.07);
+    --border-mid: rgba(255,255,255,0.13);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --green-dim: rgba(5,150,105,0.15);
+    --red-dim: rgba(220,38,38,0.15);
+  }
+
+  [data-theme="dark"] html { color-scheme: dark; }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { color-scheme: light; }
   body {
@@ -41,9 +57,14 @@
 }
 
 @layer utilities {
+  * { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease; }
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: rgba(0,0,0,0.12) transparent;
+  }
+  [data-theme="dark"] .scrollbar-thin {
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar { width: 3px; height: 3px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
