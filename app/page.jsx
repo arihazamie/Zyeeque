@@ -1066,7 +1066,7 @@ export default function HomePage() {
         </div>
 
         {/* ── PANEL KANAN (40%) ─────────────────────────────────────────── */}
-        <RightPanel />
+        <RightPanel candles={candles} instId={instId} bar={bar} />
       </div>
     </div>
   );
@@ -1133,18 +1133,125 @@ const DUMMY_CHAT = [
 // ════════════════════════════════════════════════════════════════════════════
 // RIGHT PANEL COMPONENT
 // ════════════════════════════════════════════════════════════════════════════
-function RightPanel() {
+function RightPanel({ candles = [], instId = "BTC-USDT", bar = "1H" }) {
   const [chatInput, setChatInput] = useState("");
-  const [messages, setMessages]   = useState(DUMMY_CHAT);
+  const [messages, setMessages]   = useState([
+    { role:"ai", text:"Halo! Saya AI Trading Assistant Zyeeque. Data market sudah terhubung. Tanya saya tentang kondisi market, sinyal, atau strategi." }
+  ]);
   const [activeTab, setActiveTab] = useState("positions");
-  const chatEndRef = useRef(null);
+  const chatEndRef  = useRef(null);
+  const isChatRef   = useRef(false); // mencegah double send
 
-  const sendMsg = () => {
+  // ── AI Signal state ──────────────────────────────────────────────────────
+  const [aiSignal,    setAiSignal]    = useState(null);  // { signal, confidence, reason, sl_pct, tp_pct }
+  const [signalState, setSignalState] = useState("idle"); // idle | loading | error
+  const signalTimerRef = useRef(null);
+  const lastCandleTsRef = useRef(null);
+
+  // ── Compute indicator snapshots for AI (lightweight, latest values only) ─
+  const getIndicators = useCallback(() => {
+    if (candles.length < 14) return {};
+    const closes = candles.map(c => c.c);
+    const highs   = candles.map(c => c.h);
+    const lows    = candles.map(c => c.l);
+
+    // Lazy import — indicators.js sudah ada di project
+    try {
+      const rsi    = calcRSI(closes, 14);
+      const ema7v  = calcEMA(closes, 7);
+      const ema25v = calcEMA(closes, 25);
+      const macd   = calcMACD(closes, 12, 26, 9);
+      const bb     = calcBB(closes, 20, 2);
+      const st     = calcSuperTrend(highs, lows, closes, 10, 3);
+      const stoch  = calcStochRSI(closes, 14, 14, 3, 3);
+      return {
+        rsi,
+        ema7:       ema7v,
+        ema25:      ema25v,
+        macdLine:   macd.macdLine,
+        signalLine: macd.signalLine,
+        histogram:  macd.histogram,
+        bbUpper:    bb.upper,
+        bbLower:    bb.lower,
+        stDir:      st.direction?.[st.direction.length - 1],
+        stochK:     stoch.k,
+        stochD:     stoch.d,
+      };
+    } catch { return {}; }
+  }, [candles]);
+
+  // ── Fetch AI signal ──────────────────────────────────────────────────────
+  const fetchSignal = useCallback(async () => {
+    if (candles.length < 14) return;
+    setSignalState("loading");
+    try {
+      const indicators = getIndicators();
+      const res = await fetch("/api/ai/signal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instId, bar, candles: candles.slice(-50), indicators }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Signal error");
+      setAiSignal(data);
+      setSignalState("idle");
+    } catch (err) {
+      console.error("[AI Signal]", err);
+      setSignalState("error");
+    }
+  }, [candles, instId, bar, getIndicators]);
+
+  // Auto-refresh signal setiap candle baru (max 1x per 30 detik)
+  useEffect(() => {
+    const lastTs = candles[candles.length - 1]?.t;
+    if (!lastTs || lastTs === lastCandleTsRef.current) return;
+    lastCandleTsRef.current = lastTs;
+
+    if (signalTimerRef.current) clearTimeout(signalTimerRef.current);
+    signalTimerRef.current = setTimeout(() => fetchSignal(), 1000); // debounce 1s
+    return () => { if (signalTimerRef.current) clearTimeout(signalTimerRef.current); };
+  }, [candles, fetchSignal]);
+
+  // ── Real AI Chat ─────────────────────────────────────────────────────────
+  const sendMsg = async () => {
     const txt = chatInput.trim();
-    if (!txt) return;
-    setMessages(m => [...m, { role:"user", text:txt }, { role:"ai", text:"Sedang menganalisis... (ini adalah demo frontend — integrasi AI belum aktif)." }]);
+    if (!txt || isChatRef.current) return;
+    isChatRef.current = true;
+
+    const userMsg = { role: "user", text: txt };
+    setMessages(m => [...m, userMsg, { role: "ai", text: "⏳ Menganalisis..." }]);
     setChatInput("");
-    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior:"smooth" }), 50);
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+
+    try {
+      const indicators = getIndicators();
+      // Bangun history untuk API (pakai format { role, content })
+      const history = messages
+        .filter(m => m.role === "user" || (m.role === "ai" && !m.text.startsWith("⏳")))
+        .map(m => ({ role: m.role === "ai" ? "assistant" : "user", content: m.text }));
+
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...history, { role: "user", content: txt }],
+          context: {
+            instId, bar,
+            candles: candles.slice(-30),
+            indicators,
+            signal: aiSignal,
+          },
+        }),
+      });
+      const data = await res.json();
+      const reply = data.reply ?? data.error ?? "Tidak ada respons.";
+      setMessages(m => [...m.slice(0, -1), { role: "ai", text: reply }]);
+    } catch (err) {
+      setMessages(m => [...m.slice(0, -1), { role: "ai", text: `Error: ${err.message}` }]);
+    } finally {
+      isChatRef.current = false;
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    }
   };
 
   const tabs = [
@@ -1157,8 +1264,61 @@ function RightPanel() {
   return (
     <div style={{ flex:"0 0 40%", display:"flex", flexDirection:"column", background:"var(--bg-surface)", minWidth:0 }}>
 
+    <div style={{ flex:"0 0 44%", display:"flex", flexDirection:"column", borderBottom:"1px solid var(--border-subtle)", minHeight:0 }}>
+
+      {/* ── AI SIGNAL PANEL ──────────────────────────────────────────────── */}
+      {(() => {
+        const sigColor = { BUY:"#059669", SELL:"#dc2626", HOLD:"#d97706" }[aiSignal?.signal] ?? "#64748b";
+        const sigBg    = { BUY:"rgba(5,150,105,0.08)", SELL:"rgba(220,38,38,0.06)", HOLD:"rgba(217,119,6,0.07)" }[aiSignal?.signal] ?? "transparent";
+        return (
+          <div style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 12px", borderBottom:"1px solid var(--border-subtle)", background:"var(--bg-panel)", flexShrink:0, minHeight:36 }}>
+            {/* Signal badge */}
+            <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:0 }}>
+              {signalState === "loading" ? (
+                <span style={{ fontSize:10, color:"var(--text-muted)", display:"flex", alignItems:"center", gap:5 }}>
+                  <span className="spin" style={{ width:10, height:10, border:"1.5px solid var(--border-subtle)", borderTopColor:"var(--accent-cyan)", borderRadius:"50%", display:"inline-block" }} />
+                  AI analyzing…
+                </span>
+              ) : aiSignal ? (
+                <>
+                  <span style={{ fontSize:11, fontWeight:800, padding:"2px 8px", borderRadius:4, background:sigBg, color:sigColor, border:`1px solid ${sigColor}44`, letterSpacing:"0.04em", flexShrink:0 }}>
+                    {aiSignal.signal}
+                  </span>
+                  <span style={{ fontSize:10, color:"var(--text-muted)", flexShrink:0 }}>
+                    {(aiSignal.confidence * 100).toFixed(0)}%
+                  </span>
+                  <span style={{ fontSize:10, color:"var(--text-secondary)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                    {aiSignal.reason}
+                  </span>
+                  {aiSignal.signal !== "HOLD" && (
+                    <span style={{ fontSize:9, color:"var(--text-muted)", flexShrink:0, display:"flex", gap:6 }}>
+                      <span style={{ color:"#dc2626" }}>SL {aiSignal.sl_pct}%</span>
+                      <span style={{ color:"#059669" }}>TP {aiSignal.tp_pct}%</span>
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span style={{ fontSize:10, color:"var(--text-muted)" }}>
+                  {candles.length < 14 ? "Waiting for data…" : "No signal yet"}
+                </span>
+              )}
+              {signalState === "error" && (
+                <span style={{ fontSize:10, color:"#dc2626" }}>⚠ Signal error</span>
+              )}
+            </div>
+            {/* Analyze button */}
+            <button
+              onClick={fetchSignal}
+              disabled={signalState === "loading" || candles.length < 14}
+              style={{ fontSize:9, fontWeight:700, padding:"3px 8px", borderRadius:4, cursor:"pointer", flexShrink:0, border:"1px solid var(--border-subtle)", background:"transparent", color:"var(--text-muted)", opacity: signalState==="loading" ? 0.5 : 1 }}
+            >
+              ↻ Analyze
+            </button>
+          </div>
+        );
+      })()}
+
       {/* ── CHATBOT ──────────────────────────────────────────────────────── */}
-      <div style={{ flex:"0 0 44%", display:"flex", flexDirection:"column", borderBottom:"1px solid var(--border-subtle)", minHeight:0 }}>
         {/* Chat header */}
         <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderBottom:"1px solid var(--border-subtle)", background:"var(--bg-panel)", flexShrink:0 }}>
           <div style={{ width:28, height:28, borderRadius:8, background:"linear-gradient(135deg,#06b6d4,#7c3aed)", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -1168,11 +1328,11 @@ function RightPanel() {
             <div style={{ fontSize:12, fontWeight:700, color:"var(--text-primary)" }}>AI Trading Assistant</div>
             <div style={{ fontSize:10, color:"var(--text-muted)", display:"flex", alignItems:"center", gap:4 }}>
               <span style={{ width:5, height:5, borderRadius:"50%", background:"#059669", display:"inline-block" }} />
-              Online · Model v3.2 · Acc {DUMMY_STATS.aiAccuracy}%
+              Online · OpenRouter · {candles.length} candles
             </div>
           </div>
           <div style={{ marginLeft:"auto", fontSize:10, color:"var(--text-muted)", background:"rgba(6,182,212,0.08)", border:"1px solid rgba(6,182,212,0.2)", borderRadius:4, padding:"2px 7px" }}>
-            Retrained {DUMMY_STATS.lastRetrain}
+            {instId} · {bar}
           </div>
         </div>
 

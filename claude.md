@@ -4,164 +4,189 @@
 
 Zyeeque adalah web-based trading system berbasis Next.js dengan fokus:
 
-- Realtime chart & data streaming
-- AI-assisted scalping (Multi-timeframe: 1H untuk konfirmasi tren, 15m untuk eksekusi). AI HANYA merespon dan menganalisa berdasarkan aliran data realtime OKX WebSocket yang masuk, tidak berasumsi sendiri.
-- Integrasi exchange (OKX, extensible ke multi-exchange)
-- Trading automation (Status saat ini: Read-only indikator/sinyal. Fase final: AI dapat melakukan eksekusi Open/Close Position secara mandiri)
+- Realtime chart & data streaming via OKX WebSocket
+- AI-assisted scalping — Multi-timeframe: **1H untuk konfirmasi tren, 15m untuk eksekusi**
+- AI HANYA merespon dan menganalisa berdasarkan aliran data realtime OKX WebSocket yang masuk — **tidak pernah berasumsi sendiri**
+- Integrasi exchange: OKX (extensible ke multi-exchange)
+- Trading automation:
+  - **Fase 1 (DONE):** Chart realtime + indikator teknikal
+  - **Fase 2 (CURRENT):** AI sinyal scalping (read-only, analisa indikator)
+  - **Fase 3 (FINAL):** AI auto-execution — Open/Close Position secara mandiri
 
-Struktur project:
-
-- `/app/api` → backend endpoints
-- `/lib` → core logic (OKX integration, indicators)
-- `/app` → UI (Next.js)
-
-Claude HARUS memahami:
-- Ini project yang SUDAH berjalan
-- Fokus: **improve, extend, optimize**
-- BUKAN rebuild dari nol
+Claude **wajib tahu fase saat ini** sebelum buat fitur. Jangan loncat ke Fase 3 kecuali diminta eksplisit.
 
 ---
 
-## 🎯 Primary Objective
+## 📁 Struktur Project & File Mapping
 
-Membangun sistem:
+```
+/app
+  page.jsx              ← UI utama (chart, sinyal AI, panel indikator)
+  layout.jsx            ← Root layout
+  globals.css           ← Global styles
+  login/
+    page.jsx            ← Login UI
+  api/
+    auth/
+      login/route.js    ← POST login → set cookie `zyeeque_auth`
+      logout/route.js   ← POST logout → clear cookie
+    okx/
+      history/route.js  ← GET candlestick history dari OKX
 
-- Realtime (WebSocket-based)
-- Fast & low-latency
-- AI-assisted decision (scalping)
-- Exchange-integrated (data + execution)
+/lib
+  okx.js                ← OKX config, WebSocket endpoints, fetch candles, formatters
+  indicators.js         ← Semua indikator teknikal (SMA, EMA, RSI, MACD, BB, ATR, SuperTrend, dll)
 
-Semua solusi harus mengarah ke sini.
+middleware.js           ← Auth guard (cookie `zyeeque_auth` vs AUTH_SECRET)
+```
+
+**Mapping wajib:**
+- API endpoint baru → `/app/api/[nama]/route.js`
+- Logic / kalkulasi baru → `/lib/`
+- UI baru → `/app/` atau komponen dalam `page.jsx`
+
+**JANGAN** buat ulang sistem dari nol. Selalu extend file yang sudah ada.
 
 ---
 
-## 🛠 Tech Stack Constraint (WAJIB DIIKUTI)
+## 🔐 Auth & Middleware Awareness (CRITICAL)
 
-- **UI Framework:** Next.js (App Router)
-- **Styling:** Tailwind CSS
-- **Charting:** Lightweight Charts (TradingView)
-- **State Management:** Zustand (Wajib digunakan untuk mengelola pergerakan data realtime / WebSocket yang masif agar aplikasi tidak berat)
+- Auth menggunakan cookie `zyeeque_auth` dibandingkan dengan env `AUTH_SECRET`
+- `middleware.js` guard semua route kecuali `/login` dan `/api/auth/login`
+- Jika membuat API endpoint baru yang butuh akses publik → tambahkan ke `PUBLIC_PATHS` di `middleware.js`
+- Jika membuat API endpoint yang harus protected → tidak perlu ubah middleware (otomatis terlindungi)
+- **Jangan pernah** expose `AUTH_SECRET` ke client-side
+
+---
+
+## ⚙️ OKX Integration (lib/okx.js)
+
+**Pairs yang didukung:** BTC, ETH, SOL, BNB, XRP, DOGE, ADA, AVAX, MATIC, LINK (semua vs USDT)
+
+**Timeframes:** `15m`, `1H`, `4H`
+
+**WebSocket Endpoints:**
+- Public: `wss://ws.okx.com:8443/ws/v5/public` (+ 2 fallback)
+- Business: `wss://ws.okx.com:8443/ws/v5/business` (+ 2 fallback)
+
+**Fetch Candles:**
+```js
+fetchOkxCandles({ instId, bar, range: "since2026" | "recent" })
+// Returns: [{ t, o, h, l, c, v, live }, ...]
+```
+
+**Format Candle (normalized):**
+```js
+{ t: Number, o: Number, h: Number, l: Number, c: Number, v: Number, live: Boolean }
+```
+
+**In-memory cache:** TTL 60 detik per key `recent:{instId}:{bar}` / `since2026:{instId}:{bar}`
+
+**Selalu gunakan** `isSupportedPair()` dan `isSupportedBar()` untuk validasi input.
+
+---
+
+## 📊 Indikator Teknikal (lib/indicators.js)
+
+**Library:** `technicalindicators` npm
+
+**Yang tersedia (via library):**
+`calcSMA`, `calcEMA`, `calcRSI`, `calcMACD`, `calcBB`, `calcATR`, `calcStochRSI`, `calcWilliamsR`, `calcCCI`, `calcEMARibbon`, `calcVWAP`
+
+**Yang manual (tidak ada di library):**
+`calcRMA`, `calcWMA`, `calcVWMA`, `calcSTDEV`, `calcSuperTrend`, `calcVolumeDelta`, `calcEMAIndicator`
+
+**Format output semua indikator:**
+- Array sejajar dengan input (panjang sama)
+- `null` pada posisi warm-up period
+
+**JANGAN** ubah signature fungsi yang sudah ada. `page.jsx` bergantung langsung pada format ini.
+
+---
+
+## 🛠 Tech Stack Constraint (WAJIB)
+
+| Layer | Library |
+|---|---|
+| Framework | Next.js (App Router) |
+| Styling | Tailwind CSS |
+| Charting | Lightweight Charts (TradingView) |
+| State Management | **Zustand** — wajib untuk data realtime/WebSocket |
+| Indikator | technicalindicators npm |
+
+Jangan pakai library lain tanpa konfirmasi eksplisit dari user.
 
 ---
 
 ## 🤖 Claude Role Priority
 
-1. **Code Generator (PRIMARY)**
-   - Generate code siap pakai (production-ready)
-   - Fokus ke solusi langsung jalan
-
-2. **Code Reviewer**
-   - Perbaiki, optimasi, dan validasi code
-
-3. **System Designer**
-   - Desain arsitektur sederhana & scalable
-   - Hindari overengineering
-
----
-
-## ⚙️ Project-Aware Rules
-
-Claude HARUS:
-
-- Reuse existing structure
-- Extend file yang sudah ada
-- Konsisten dengan pattern project
-
-Mapping wajib:
-- API → `/app/api`
-- Logic → `/lib`
-- UI → `/app`
-
-JANGAN:
-- Buat ulang sistem dari nol
-- Ignore struktur existing
+1. **Code Generator (PRIMARY)** — Generate code siap pakai, production-ready
+2. **Code Reviewer** — Perbaiki, optimasi, validasi code
+3. **System Designer** — Arsitektur sederhana & scalable
 
 ---
 
 ## 🛡️ Error Handling & Resiliency (CRITICAL)
 
-Mengingat ini sistem trading, aplikasi pantang mengalami *crash* atau *freeze*:
-- **WebSocket Reconnection**: WAJIB menambahkan logika *auto-reconnect* (dengan *backoff delay*) untuk mengantisipasi putusnya koneksi OKX.
-- **Data Null-Check / Parsing**: Selalu validasi struktur data *OHLCV* sebelum diberikan ke Lightweight Charts untuk mencegah error "undefined is not an object".
-- **Visual Feedback**: Sediakan UI state ("Reconnecting" / "Offline") jika data gagal mengambil update, jangan biarkan chart seolah-olah jalan padahal nge-freeze.
+Ini sistem trading. **Crash = potensi kerugian nyata.**
+
+- **WebSocket Reconnection:** WAJIB auto-reconnect dengan exponential backoff
+- **Data Null-Check:** Selalu validasi struktur OHLCV sebelum dikirim ke Lightweight Charts
+- **Visual Feedback:** Tampilkan state "Reconnecting..." / "Offline" saat koneksi putus
+- **API Error:** Selalu return response error yang informatif, jangan biarkan silent fail
+- **Indikator:** Tangani kasus data kurang dari warm-up period (return null, jangan crash)
 
 ---
 
 ## ⚡ Execution Bias (CRITICAL)
 
-Claude harus:
-
 - Prioritaskan eksekusi dibanding penjelasan
-- Jika bisa langsung code → JANGAN jelaskan dulu
-- Hindari overthinking
+- Jika bisa langsung code → **JANGAN jelaskan dulu**
+- Penjelasan maksimal **3–5 baris** jika memang perlu
 
-Rule utama:
-> "Working solution first, improvement later"
+> **"Working solution first, improvement later"**
+
+---
+
+## 🔥 Development Workflow
+
+1. Identifikasi file existing yang relevan
+2. Extend / improve (jangan rebuild)
+3. Deliver final code siap pakai
+
+Jika ada ambiguity → tanya **maksimal 2 pertanyaan singkat**, lalu lanjut.
+
+---
+
+## 📡 Scalping & Multi-Timeframe Rules
+
+- **1H** → konfirmasi tren (trend direction)
+- **15m** → entry/exit signal (eksekusi)
+- **4H** → konteks makro (opsional, support only)
+
+**Aturan:**
+- Sinyal 15m hanya valid jika **aligned** dengan tren 1H
+- Jangan ubah logika multi-timeframe ini kecuali diminta eksplisit
+- AI analysis harus berbasis data WebSocket realtime, bukan asumsi statis
 
 ---
 
 ## 💰 Trading Impact Awareness
 
-Claude harus sadar bahwa:
-
-- Output akan digunakan untuk keputusan trading nyata
-- Kesalahan logic = potensi kerugian
-
-Maka:
-- Gunakan logic yang aman & realistis
-- Hindari asumsi tanpa dasar
-- Validasi secara implicit sebelum output
+- Output digunakan untuk keputusan trading **dengan uang nyata**
+- Kesalahan logic = potensi kerugian finansial
+- Validasi logic secara implisit sebelum output
+- Gunakan logic aman & realistis, hindari asumsi tanpa dasar
 
 ---
 
 ## ⚡ Speed Priority
 
-Dalam konteks scalping:
+Konteks scalping:
+- **Speed > perfect architecture**
+- **Simplicity > abstraction**
 
-- Speed > perfect architecture
-- Simplicity > abstraction
-
-Claude HARUS memilih:
-- solusi paling cepat jalan
-- bukan paling kompleks atau “indah”
-
----
-
-## 🚀 Development Workflow
-
-Claude harus:
-
-1. Identify existing code terkait
-2. Extend / improve
-3. Deliver final code (siap pakai)
-
-Jika ada ambiguity:
-→ Tanya maksimal 2-3 pertanyaan singkat
-
----
-
-## 🔌 Trading System Awareness
-
-Semua solusi harus:
-
-- Realtime-capable
-- Async / non-blocking
-- Low latency
-- Cocok untuk scalping
-
----
-
-## 📊 Output Rules
-
-Claude harus:
-
-- Langsung ke solusi
-- Code-first approach
-- Penjelasan maksimal 3–5 baris (jika perlu)
-
-Hindari:
-- Jawaban panjang
-- Teori tidak perlu
+Pilih solusi paling cepat jalan, bukan paling kompleks.
 
 ---
 
@@ -171,56 +196,42 @@ Hindari:
 - Production-ready
 - Modular & reusable
 - Naming jelas & konsisten
-- Hindari over abstraction
+- Hindari over-abstraction
 
-Jika membuat:
-- API → scalable & clean
-- Logic → efisien & cepat
-- UI → minimal & functional
+**Pattern per layer:**
+- API route → validate input dulu, return JSON konsisten `{ data, error }`
+- Logic `/lib` → pure functions, tidak ada side effect ke UI
+- UI → minimal, functional, Zustand untuk state realtime
 
 ---
 
 ## 🚫 Anti-Patterns (STRICT)
 
-Claude DILARANG:
-
-- Memberikan teori panjang
-- Overengineering
-- Jawaban generic
-- Tidak sesuai konteks trading
-- Terlalu verbose
-- Tidak memanfaatkan struktur project
-
----
-
-## 🔥 Smart Behavior
-
-Jika diminta fitur baru:
-
-Claude HARUS:
-- Tentukan file placement
-- Tentukan integration point
-- Pastikan kompatibel dengan existing system
+Claude **DILARANG:**
+- Memberikan teori panjang tanpa code
+- Overengineering / abstraction berlebihan
+- Jawaban generic tidak sesuai konteks project
+- Rebuild ulang sistem yang sudah ada
+- Expose secret/credential ke client-side
+- Mengubah signature indikator yang sudah ada
+- Loncat ke Fase 3 (auto-execution) tanpa instruksi eksplisit
 
 ---
 
-## 🧩 Example Behavior
+## 🧩 Contoh Behavior
 
-User:
-"buat websocket realtime price"
+**User:** "buat websocket realtime price"
 
-Claude:
-- Tambah di `/lib/ws.js` atau extend `okx.js`
-- Integrasi ke UI
-- Langsung kasih code
-- Tanpa penjelasan panjang
+**Claude:**
+- Extend `lib/okx.js` atau buat `lib/ws.js`
+- Gunakan Zustand store untuk distribute data ke UI
+- Implement auto-reconnect dengan backoff
+- Langsung kasih code, tanpa penjelasan panjang
 
 ---
 
-## 🎯 End Goal Awareness
+## 🎯 End Goal
 
-Claude harus selalu align ke:
+> **Web trading realtime + AI scalping + OKX integration + auto-execution**
 
-> Web trading realtime + AI scalping + exchange integration + automation
-
-Semua output harus mendekatkan ke tujuan ini.
+Semua output harus mendekatkan ke tujuan ini, sesuai fase yang sedang berjalan.
